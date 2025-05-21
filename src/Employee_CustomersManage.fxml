@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+
+    <!-- Top: Thanh tìm kiếm + nút thêm -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <children>
+                <Label text="Tìm khách hàng:" />
+                <TextField fx:id="searchField" prefWidth="250" promptText="Nhập tên hoặc số điện thoại" />
+                <Region HBox.hgrow="ALWAYS" />
+            </children>
+        </HBox>
+    </top>
+
+    <!-- Left: Danh sách khách hàng -->
+    <left>
+        <VBox spacing="5">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <children>
+                <Label style="-fx-font-weight: bold;" text="Danh sách khách hàng" />
+                <TableView fx:id="customerTable" prefHeight="500" prefWidth="400">
+                    <columns>
+                        <TableColumn fx:id="colCustomerId" prefWidth="80" text="Mã KH" />
+                        <TableColumn fx:id="colCustomerName" prefWidth="150" text="Họ tên" />
+                        <TableColumn fx:id="colCustomerPhone" prefWidth="150" text="SĐT" />
+                    </columns>
+                </TableView>
+            </children>
+        </VBox>
+    </left>
+
+    <!-- Center: Chi tiết khách hàng -->
+    <center>
+        <VBox spacing="15">
+            <padding>
+                <Insets bottom="20" left="20" right="20" top="20" />
+            </padding>
+            <children>
+                <Label style="-fx-font-size: 16px; -fx-font-weight: bold;" text="Thêm khách hàng mới" />
+
+                <HBox spacing="10">
+   <children>
+                       <Label minWidth="120" text="Mã khách hàng:" />
+                       <TextField fx:id="customerIdField" editable="false" />
+   </children>
+                </HBox>
+
+                <HBox spacing="10">
+   <children>
+                       <Label minWidth="120" text="Họ tên:" />
+                       <TextField fx:id="customerNameField" />
+   </children>
+                </HBox>
+
+                <HBox spacing="10">
+   <children>
+                       <Label minWidth="120" text="Số điện thoại:" />
+                       <TextField fx:id="customerPhoneField" />
+   </children>
+                </HBox>
+
+                <HBox spacing="10">
+   <children>
+                       <Label minWidth="120" text="Email:" />
+                       <TextField fx:id="customerEmailField" />
+   </children>
+                </HBox>
+
+                <HBox alignment="CENTER_LEFT" spacing="15">
+   <children>
+                       <Button fx:id="updateCustomerBtn" style="-fx-background-color: #2ecc71; -fx-text-fill: white;" text="Thêm khách hàng" />
+   </children>
+                </HBox>
+            </children>
+        </VBox>
+    </center>
+
+</BorderPane>
