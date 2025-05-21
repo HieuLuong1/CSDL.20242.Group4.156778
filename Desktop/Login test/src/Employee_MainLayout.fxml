@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane fx:id="employeeMainLayout" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+
+    <!-- Thanh tiêu đề -->
+    <top>
+        <HBox alignment="CENTER_LEFT" prefHeight="60" spacing="10" style="-fx-background-color: #2c3e50;">
+            <children>
+                <Label style="-fx-text-fill: white; -fx-font-size: 16px;" text="Nhân viên: [Tên nhân viên]">
+                    <padding>
+                        <Insets left="10" />
+                    </padding>
+                </Label>
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="logoutBtn" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Đăng xuất">
+                    <padding>
+                        <Insets bottom="8" left="16" right="16" top="8" />
+                    </padding>
+                    <HBox.margin>
+                        <Insets right="10" />
+                    </HBox.margin>
+                </Button>
+            </children>
+        </HBox>
+    </top>
+
+    <!-- Menu chức năng -->
+    <left>
+        <VBox alignment="TOP_CENTER" prefWidth="200" spacing="10" style="-fx-background-color: #ecf0f1;">
+            <children>
+                <Label style="-fx-font-size: 14px; -fx-font-weight: bold;" text="Chức năng">
+                    <padding>
+                        <Insets top="10" />
+                    </padding>
+                </Label>
+                <Button fx:id="btnProfile" maxWidth="160" text="Thông tin cá nhân" />
+                <Button fx:id="btnSchedule" maxWidth="160" text="Lịch làm việc" />
+                <Button fx:id="btnCreateCustomer" maxWidth="160" text="Quản lý khách hàng" />
+
+                <Button fx:id="btnUpdateStock" maxWidth="160" text="Quản lý kho" />
+                <Button fx:id="btnCheckout" maxWidth="160" text="Tạo hóa đơn" />
+            </children>
+            <padding>
+                <Insets bottom="20" left="20" right="20" top="20" />
+            </padding>
+        </VBox>
+    </left>
+
+    <!-- Vùng hiển thị nội dung -->
+    <center>
+        <StackPane fx:id="contentArea" style="-fx-background-color: white;">
+            <children>
+                <Label style="-fx-text-fill: #7f8c8d;" text="Chọn chức năng bên trái" />
+            </children>
+        </StackPane>
+    </center>
+
+</BorderPane>

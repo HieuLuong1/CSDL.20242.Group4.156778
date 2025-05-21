@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+
+    <!-- Top: Tìm kiếm + Thêm sản phẩm -->
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="10">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <children>
+                <Label text="Tìm sản phẩm:" />
+                <TextField fx:id="searchField" prefWidth="250" promptText="Nhập tên sản phẩm" />
+                <Region HBox.hgrow="ALWAYS" />
+                <Button fx:id="addNewProductBtn" style="-fx-background-color: #3498db; -fx-text-fill: white;" text="Thêm sản phẩm mới" />
+            </children>
+        </HBox>
+    </top>
+
+    <!-- Center: Bảng sản phẩm + cập nhật -->
+    <center>
+        <VBox spacing="10">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <children>
+                <TableView fx:id="productTable" prefHeight="400">
+                    <columns>
+                        <TableColumn fx:id="colProductName" prefWidth="200" text="Tên sản phẩm" />
+                        <TableColumn fx:id="colCategory" prefWidth="150" text="Loại" />
+                        <TableColumn fx:id="colQuantity" prefWidth="120" text="Số lượng còn" />
+                        <TableColumn fx:id="colPrice" prefWidth="120" text="Đơn giá (VNĐ)" />
+                        <TableColumn fx:id="colSupplier" prefWidth="200" text="Nhà cung cấp" />
+                    </columns>
+                </TableView>
+
+                <Label style="-fx-font-weight: bold;" text="Cập nhật sản phẩm" />
+
+                <GridPane hgap="10" vgap="10">
+                    <columnConstraints>
+                        <ColumnConstraints minWidth="150" />
+                        <ColumnConstraints minWidth="300" />
+                    </columnConstraints>
+                    <children>
+                        <Label text="Tên sản phẩm:" GridPane.columnIndex="0" GridPane.rowIndex="0" />
+                        <TextField fx:id="selectedProductNameField" editable="false" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                        <Label text="Thêm số lượng:" GridPane.columnIndex="0" GridPane.rowIndex="1" />
+                        <TextField fx:id="addQuantityField" promptText="Nhập số lượng" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                        <Label text="Đơn giá mới:" GridPane.columnIndex="0" GridPane.rowIndex="2" />
+                        <TextField fx:id="updatePriceField" promptText="Nhập đơn giá mới" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                        <HBox alignment="CENTER_LEFT" spacing="10" GridPane.columnIndex="1" GridPane.rowIndex="3">
+                            <children>
+                                <Button fx:id="updateStockBtn" style="-fx-background-color: #2ecc71; -fx-text-fill: white;" text="Cập nhật" />
+                                <Button fx:id="deleteProductBtn" style="-fx-background-color: #e74c3c; -fx-text-fill: white;" text="Xóa sản phẩm" />
+                            </children>
+                        </HBox>
+                    </children>
+                    <padding>
+                        <Insets top="10" />
+                    </padding>
+               <rowConstraints>
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+                  <RowConstraints />
+               </rowConstraints>
+                </GridPane>
+            </children>
+        </VBox>
+    </center>
+
+</BorderPane>
