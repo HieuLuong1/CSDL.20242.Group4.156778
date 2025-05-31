@@ -6,7 +6,7 @@
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
 
-<AnchorPane prefHeight="300.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1">
+<AnchorPane prefHeight="300.0" prefWidth="400.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="LoginController">
     <children>
         <VBox alignment="CENTER" spacing="10.0" AnchorPane.bottomAnchor="30.0" AnchorPane.leftAnchor="50.0" AnchorPane.rightAnchor="50.0" AnchorPane.topAnchor="30.0">
             <children>
@@ -16,7 +16,7 @@
 
                 <PasswordField fx:id="passwordField" maxWidth="250" promptText="Mật khẩu" />
 
-                <Button fx:id="loginBtn" maxWidth="250" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Đăng nhập" />
+                <Button fx:id="loginBtn" maxWidth="250" onAction="#handleLogin" style="-fx-background-color: #4CAF50; -fx-text-fill: white;" text="Đăng nhập" />
             </children>
             <padding>
                 <Insets bottom="20" left="20" right="20" top="20" />
