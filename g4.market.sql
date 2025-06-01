@@ -17,17 +17,17 @@ insert into employee values ('3', 'Phuong', 'Tran Hoang', '1998/09/12', 'abcmn@g
 	
 create table schedule(
 	scheduleid varchar(10) not null, --lưu theo dạng "MM-YYYY" ví dụ "052025"
-	months int,
+	months varchar(20),
 	from_day int, --mặc định thứ 2 = 2, thứ 3 = 3...
 	to_day int, 
 	timestart time, 
 	timeend time,
 	constraint pk_schedule primary key (scheduleid));
 	
-insert into schedule values ('052025S1', '5', '2', '6', '7:00:00', '15:00:00');
-insert into schedule values ('052025S2', '5', '4', '8', '7:00:00', '15:00:00');
-insert into schedule values ('052025C1', '5', '2', '6', '15:00:00', '23:00:00');
-insert into schedule values ('052025C2', '5', '4', '8', '15:00:00', '23:00:00');
+insert into schedule values ('052025S1', '2025/5', '2', '6', '7:00:00', '15:00:00');
+insert into schedule values ('052025S2', '2025/5', '4', '8', '7:00:00', '15:00:00');
+insert into schedule values ('052025C1', '2025/5', '2', '6', '15:00:00', '23:00:00');
+insert into schedule values ('052025C2', '2025/5', '4', '8', '15:00:00', '23:00:00');
 
 create table working(
 	employeeid int not null,
@@ -94,10 +94,19 @@ create table products(
 	category int not null,
 	constraint pk_prods primary key (productid));
 	
+insert into products values ('1', 'Cosy Marie loai to', 'goi', '50000', '0', '1');
+insert into products values ('2', 'Vinamilk co duong 1l', 'hop 1 lit', '34000', '0', '2');
+insert into products values ('3', 'Colgate tra xanh', 'tuyp', '30000', '0', '3');
+
+	
 create table categories(
 	category int not null,
 	title varchar(15),
 	constraint pk_category primary key (category));
+
+insert into categories values ('1', 'Banh keo');
+insert into categories values ('2', 'Sua va kem');
+insert into categories values ('3', 'Do thiet yeu');
 	
 create table checkreport(
 	reportid int not null,
@@ -126,6 +135,10 @@ create table supplier(
 	contactname varchar(15),
 	contact varchar(10), --số điện thoại của nhà cung cấp
 	constraint pk_supplier primary key (supplierid));
+	
+insert into supplier values ('1', 'Colgate', '123 Hoan Kiem', '0123456778', 'anh Cuong');
+insert into supplier values ('2', 'Vinamilk', '30 Tran Dai Nghia', '0124356678', 'chi Van');
+insert into supplier values ('3', 'Cosy', '40 Truc Bach', '0123456779', 'anh Ha');
 
 create table incident(
 	incidentid int not null, --báo cáo xử lí sản phẩm 
