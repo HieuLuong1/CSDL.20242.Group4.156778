@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.Employee_ScheduleController">
+    <children>
+        <VBox spacing="15" AnchorPane.bottomAnchor="20" AnchorPane.leftAnchor="20" AnchorPane.rightAnchor="20" AnchorPane.topAnchor="20">
+            <children>
+                <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Lịch làm việc" />
+
+                <TableView fx:id="scheduleTable" prefHeight="450">
+                    <columns>
+                        <TableColumn fx:id="colDate" prefWidth="120" text="Ngày" />
+                        <TableColumn fx:id="colShift" prefWidth="100" text="Ca làm" />
+                        <TableColumn fx:id="colStartTime" prefWidth="100" text="Bắt đầu" />
+                        <TableColumn fx:id="colEndTime" prefWidth="100" text="Kết thúc" />
+                        <TableColumn fx:id="colStatus" prefWidth="120" text="Trạng thái" />
+                        <TableColumn fx:id="colNote" prefWidth="240" text="Ghi chú" />
+                    </columns>
+                </TableView>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
