@@ -192,7 +192,12 @@ create or replace view order_specific AS
 	join batch using (batch)
 	join products using (productid);
 
+--bổ sung 
+alter table orders 
+add column employeeid int; 
 
+alter table orders 
+add constraint fk_orders_employee foreign key (employeeid) references employee (employeeid); 
 
 --nhân viên 
 --xem kho: bảng products 
