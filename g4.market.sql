@@ -148,6 +148,21 @@ create table incident(
 	productid int not null,
 	constraint pk_incident primary key (incidentid));
 
+alter table working 
+add column workdate date; 
+alter table working 
+drop constraint pk_working;
+
+update working set workdate = '2025/06/01' where employeeid = '1' and scheduleid = '052025S1';
+update working set workdate = '2025/06/01' where employeeid = '2' and scheduleid = '052025C1';
+update working set workdate = '2025/06/01' where employeeid = '3' and scheduleid = '052025S2';
+
+alter table working 
+add constraint pk_working primary key (employeeid, scheduleid, workdate);
+
+alter table working 
+add column status int;
+
 
 alter table working 
 add constraint fk_working_employee foreign key (employeeid) references employee(employeeid) on update cascade on delete restrict;
@@ -192,12 +207,7 @@ create or replace view order_specific AS
 	join batch using (batch)
 	join products using (productid);
 
---bổ sung 
-alter table orders 
-add column employeeid int; 
 
-alter table orders 
-add constraint fk_orders_employee foreign key (employeeid) references employee (employeeid); 
 
 --nhân viên 
 --xem kho: bảng products 
