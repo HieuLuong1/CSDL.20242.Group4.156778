@@ -1,49 +1,69 @@
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
-import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.control.*;
 
 public class Employee_ScheduleController {
 
-    @FXML
-    private TableView<WorkSchedule> scheduleTable;
+    @FXML private Label titleLabel;
+    @FXML private Label presentLabel;
+    @FXML private Label lateLabel;
+    @FXML private Label absentLabel;
+    @FXML private Label totalSalaryLabel;
 
-    @FXML
-    private TableColumn<WorkSchedule, String> colDate;
+    @FXML private TableView<WorkScheduleRecord> scheduleTable;
+    @FXML private TableColumn<WorkScheduleRecord, String> colDate;
+    @FXML private TableColumn<WorkScheduleRecord, String> colShift;
+    @FXML private TableColumn<WorkScheduleRecord, String> colStartTime;
+    @FXML private TableColumn<WorkScheduleRecord, String> colEndTime;
+    @FXML private TableColumn<WorkScheduleRecord, String> colStatus;
+    @FXML private TableColumn<WorkScheduleRecord, String> colNote;
+    @FXML private TableColumn<WorkScheduleRecord, String> colSalary;
 
-    @FXML
-    private TableColumn<WorkSchedule, String> colShift;
-
-    @FXML
-    private TableColumn<WorkSchedule, String> colStartTime;
-
-    @FXML
-    private TableColumn<WorkSchedule, String> colEndTime;
-
-    @FXML
-    private TableColumn<WorkSchedule, String> colStatus;
-
-    @FXML
-    private TableColumn<WorkSchedule, String> colNote;
+    private final ObservableList<WorkScheduleRecord> scheduleList = FXCollections.observableArrayList();
 
     @FXML
     public void initialize() {
-        colDate.setCellValueFactory(new PropertyValueFactory<>("date"));
-        colShift.setCellValueFactory(new PropertyValueFactory<>("shift"));
-        colStartTime.setCellValueFactory(new PropertyValueFactory<>("startTime"));
-        colEndTime.setCellValueFactory(new PropertyValueFactory<>("endTime"));
-        colStatus.setCellValueFactory(new PropertyValueFactory<>("status"));
-        colNote.setCellValueFactory(new PropertyValueFactory<>("note"));
+        // Gán cột dữ liệu
+        colDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDate()));
+        colShift.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getShift()));
+        colStartTime.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStartTime()));
+        colEndTime.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEndTime()));
+        colStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
+        colNote.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getNote()));
+        colSalary.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getSalaryEarned() + " VND"));
 
-        ObservableList<WorkSchedule> schedules = FXCollections.observableArrayList(
-            new WorkSchedule("2025-05-20", "Sáng", "08:00", "12:00", "Có mặt", ""),
-            new WorkSchedule("2025-05-21", "Chiều", "13:00", "17:00", "Đi muộn", "Tắc đường"),
-            new WorkSchedule("2025-05-22", "Sáng", "08:00", "12:00", "Vắng", "Bị ốm"),
-            new WorkSchedule("2025-05-23", "Tối", "18:00", "22:00", "Có mặt", "")
+        // Dữ liệu mẫu
+        scheduleList.addAll(
+            new WorkScheduleRecord("01/05/2025", "Sáng", "07:00", "15:00", "Có mặt", "", 200000),
+            new WorkScheduleRecord("02/05/2025", "Sáng", "07:00", "15:00", "Đi muộn", "Đến lúc 13:15", 100000),
+            new WorkScheduleRecord("03/05/2025", "Sáng", "07:00", "15:00", "Vắng", "Không có lý do", 0),
+            new WorkScheduleRecord("04/05/2025", "Sáng", "07:00", "15:00", "Có mặt", "", 200000)
         );
 
-        scheduleTable.setItems(schedules);
+        scheduleTable.setItems(scheduleList);
+        updateSummary();
+        calculateTotalSalary();
+    }
+
+    private void updateSummary() {
+        long present = scheduleList.stream().filter(s -> s.getStatus().equals("Có mặt")).count();
+        long late = scheduleList.stream().filter(s -> s.getStatus().equals("Đi muộn")).count();
+        long absent = scheduleList.stream().filter(s -> s.getStatus().equals("Vắng")).count();
+
+        presentLabel.setText("Có mặt: " + present + " buổi");
+        lateLabel.setText("Đi muộn: " + late + " buổi");
+        absentLabel.setText("Vắng: " + absent + " buổi");
+    }
+
+    private void calculateTotalSalary() {
+        int total = scheduleList.stream().mapToInt(WorkScheduleRecord::getSalaryEarned).sum();
+        totalSalaryLabel.setText("Lương tạm tính: " + total + " VND");
+    }
+
+    @FXML
+    private void handleShowDetail() {
+        scheduleTable.setVisible(!scheduleTable.isVisible());
     }
 }

@@ -47,7 +47,7 @@ public class Employee_MainController {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
+	}  
 	@FXML
 	private void handleViewSchedule() {
 		try {
@@ -60,19 +60,33 @@ public class Employee_MainController {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-	}
+	} 
 	@FXML
 	private void handleManageCustomers() {
-	    try {
-	        FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_CustomersManage.fxml"));
-	        Parent root = loader.load();
+		try {
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_CustomersManage.fxml"));
+			Parent root = loader.load();
 
-	        Stage stage = new Stage();
-	        stage.setTitle("Quản lý khách hàng");
-	        stage.setScene(new Scene(root));
-	        stage.show();
-	    } catch (Exception e) {
-	        e.printStackTrace();
-	    }
+			Stage stage = new Stage();
+			stage.setTitle("Quản lý khách hàng");
+			stage.setScene(new Scene(root));
+			stage.show();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
+	@FXML
+	void handleStorage() {
+		try {
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_StoreManage.fxml"));
+			Parent root = loader.load();
+			// contentArea.getChildren().setAll(root);
+			Stage stage = new Stage();
+			stage.setTitle("Kho và Hàng hóa");
+			stage.setScene(new Scene(root));
+			stage.show();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	} 
 }

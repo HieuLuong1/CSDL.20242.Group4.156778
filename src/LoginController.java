@@ -26,6 +26,7 @@ public class LoginController {
     private final Map<String, String> accountRole = new HashMap<>();
     private final Map<String, Customer> customerAccounts = new HashMap<>();
     private final Map<String, Employee> employeeAccounts = new HashMap<>();
+    private final Map<String, Admin> adminAccounts = new HashMap<>();
 
     @FXML
     public void initialize() {
@@ -36,6 +37,10 @@ public class LoginController {
         accountPassword.put("employee01", "abc123");
         accountRole.put("employee01", "employee");
         employeeAccounts.put("employee01", new Employee("NV001", "Trần Thị B", "12/03/1998", "Nữ", "tranb@gmail.com", "0987654321", "Hà Nội", "123456789012"));
+        
+        accountPassword.put("admin01", "admin123");
+        accountRole.put("admin01", "admin");
+        adminAccounts.put("admin01", new Admin("AD001", "Quản lý siêu thị", "admin@gmail.com", "0123456789"));
     }
 
     @FXML
@@ -77,6 +82,17 @@ public class LoginController {
                 Stage stage = (Stage) usernameField.getScene().getWindow();
                 stage.setScene(new Scene(root));
                 stage.setTitle("Trang nhân viên");
+            }
+            else if (role.equals("admin")) {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("Admin_MainLayout.fxml"));
+                Parent root = loader.load();
+
+                Admin_MainController controller = loader.getController();
+                controller.setAdmin(adminAccounts.get(username));
+
+                Stage stage = (Stage) usernameField.getScene().getWindow();
+                stage.setScene(new Scene(root));
+                stage.setTitle("Trang quản lý");
             }
         } catch (IOException e) {
             errorLabel.setText("Lỗi tải giao diện.");

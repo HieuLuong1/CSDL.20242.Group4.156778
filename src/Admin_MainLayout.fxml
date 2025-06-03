@@ -4,22 +4,14 @@
 <?import javafx.geometry.*?>
 <?import javafx.scene.control.*?>
 <?import javafx.scene.layout.*?>
-<?import javafx.geometry.Insets?>
-<?import javafx.scene.control.Button?>
-<?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.BorderPane?>
-<?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
-<?import javafx.scene.layout.StackPane?>
-<?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="employeeMainLayout" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Employee_MainController">
+<BorderPane fx:id="adminMainLayout" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Admin_MainController">
 
     <!-- Thanh tiêu đề -->
     <top>
-        <HBox alignment="CENTER_LEFT" prefHeight="60" spacing="10" style="-fx-background-color: #2c3e50;">
+        <HBox alignment="CENTER_LEFT" prefHeight="60" spacing="10" style="-fx-background-color: #34495e;">
             <children>
-                <Label fx:id="welcomeLabel" style="-fx-text-fill: white; -fx-font-size: 16px;" text="Nhân viên: [Tên nhân viên]">
+                <Label fx:id="welcomeLabel" style="-fx-text-fill: white; -fx-font-size: 16px;" text="Quản lý: [Tên quản lý]">
                     <padding>
                         <Insets left="10" />
                     </padding>
@@ -46,12 +38,13 @@
                         <Insets top="10" />
                     </padding>
                 </Label>
-                <Button fx:id="btnProfile" maxWidth="160" onAction="#handleViewPersonalInfo" text="Thông tin cá nhân" />
-                <Button fx:id="btnSchedule" maxWidth="160" onAction="#handleViewSchedule" text="Lịch làm việc" />
-                <Button fx:id="btnCreateCustomer" maxWidth="160" onAction="#handleManageCustomers" text="Quản lý khách hàng" />
+                <Button fx:id="btnCustomers" maxWidth="160" onAction="#handleManageCustomers" text="Quản lý khách hàng" />
+                <Button fx:id="btnEmployees" maxWidth="160" onAction="#handleManageEmployees" text="Quản lý nhân viên" />
 
                 <Button fx:id="btnUpdateStock" maxWidth="160" onAction="#handleStorage" text="Quản lý kho" />
-                <Button fx:id="btnOrder" maxWidth="160" text="Tạo hóa đơn" />
+                <Button maxWidth="160" text="Quản lý thu chi" />
+                <Button maxWidth="160" text="Nhập hàng" />
+                <Button maxWidth="160" text="Xử lý hàng hỏng" />
             </children>
             <padding>
                 <Insets bottom="20" left="20" right="20" top="20" />
@@ -59,7 +52,7 @@
         </VBox>
     </left>
 
-    <!-- Vùng hiển thị nội dung -->
+    <!-- Nội dung trung tâm -->
     <center>
         <StackPane fx:id="contentArea" style="-fx-background-color: white;">
             <children>
