@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.control.ToggleGroup?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.EmployeeNewOrderController">
+   <right>
+      <TableView fx:id="tbBatch" prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+        <columns>
+          <TableColumn fx:id="colBatchID" prefWidth="59.3333740234375" text="Mã lô" />
+          <TableColumn fx:id="colTotalQuan" prefWidth="54.666748046875" text="SL " />
+            <TableColumn fx:id="colQuanInStock" prefWidth="95.99993896484375" text="SL còn" />
+        </columns>
+      </TableView>
+   </right>
+   <center>
+      <VBox prefHeight="200.0" prefWidth="100.0" BorderPane.alignment="CENTER">
+         <children>
+            <HBox prefHeight="100.0" prefWidth="200.0">
+               <children>
+                  <VBox prefHeight="200.0" prefWidth="100.0">
+                     <children>
+                        <Label text="Mã hóa đơn:">
+                           <VBox.margin>
+                              <Insets left="8.0" top="8.0" />
+                           </VBox.margin>
+                        </Label>
+                        <Label text="Tên SP:">
+                           <VBox.margin>
+                              <Insets left="8.0" top="20.0" />
+                           </VBox.margin>
+                        </Label>
+                        <Label text="Số lượng:">
+                           <VBox.margin>
+                              <Insets left="8.0" top="20.0" />
+                           </VBox.margin>
+                        </Label>
+                        <Label text="SDT Khách:">
+                           <VBox.margin>
+                              <Insets left="8.0" top="20.0" />
+                           </VBox.margin>
+                        </Label>
+                        <Label text="Thu ngân:">
+                           <VBox.margin>
+                              <Insets left="8.0" top="20.0" />
+                           </VBox.margin>
+                        </Label>
+                     </children>
+                  </VBox>
+                  <VBox prefHeight="175.0" prefWidth="215.0">
+                     <children>
+                        <TextField fx:id="tfOrderID">
+                           <VBox.margin>
+                              <Insets top="8.0" />
+                           </VBox.margin>
+                        </TextField>
+                        <TextField fx:id="tfNameProduct" promptText="Điền tên SP">
+                           <VBox.margin>
+                              <Insets top="8.0" />
+                           </VBox.margin>
+                        </TextField>
+                        <TextField fx:id="tfQuantity" promptText="Điền SL">
+                           <VBox.margin>
+                              <Insets top="12.0" />
+                           </VBox.margin>
+                        </TextField>
+                        <HBox prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <TextField fx:id="tfPhone" promptText="Điền SDT" />
+                              <TextField fx:id="tfNameCustomer" prefHeight="25.0" prefWidth="156.0" promptText="Tên KH" />
+                           </children>
+                           <VBox.margin>
+                              <Insets top="10.0" />
+                           </VBox.margin>
+                        </HBox>
+                        <TextField fx:id="tfEmp" promptText="Điền tên NV">
+                           <VBox.margin>
+                              <Insets top="10.0" />
+                           </VBox.margin>
+                        </TextField>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <Region prefHeight="135.0" prefWidth="400.0" />
+            <VBox prefHeight="200.0" prefWidth="100.0">
+               <children>
+                  <HBox prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <Region prefHeight="35.0" prefWidth="100.0" />
+                        <DatePicker fx:id="dpOrderDate" prefHeight="25.0" prefWidth="121.0" />
+                        <Button fx:id="btnSend" mnemonicParsing="false" onAction="#handleSend" style="-fx-background-color: green;" text="Gửi" textFill="#fbfafa" />
+                        <Region prefHeight="100.0" prefWidth="27.0" />
+                        <Button fx:id="btnCancel" mnemonicParsing="false" onAction="#handleCancel" style="-fx-background-color: red;" text="Hủy" textFill="#fdfafa" />
+                        <Region prefHeight="59.0" prefWidth="7.0" />
+                        <VBox prefHeight="59.0" prefWidth="56.0">
+                           <children>
+                              <Label text="Tổng tiền:" />
+                              <Label fx:id="lbTotalMoney" text="Label" />
+                           </children>
+                        </VBox>
+                     </children>
+                  </HBox>
+                  <HBox prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <Label prefHeight="17.0" prefWidth="81.0" text="Chọn PTTT:">
+                           <HBox.margin>
+                              <Insets left="8.0" right="10.0" />
+                           </HBox.margin>
+                        </Label>
+                        <Region prefHeight="59.0" prefWidth="18.0" />
+                        <VBox prefHeight="200.0" prefWidth="100.0">
+                           <children>
+                              <RadioButton fx:id="radioBtnCash" mnemonicParsing="false" selected="true" text="Tiền mặt">
+                                 <toggleGroup>
+                                    <ToggleGroup fx:id="tgMethod" />
+                                 </toggleGroup>
+                              </RadioButton>
+                              <RadioButton fx:id="radioBtnCard" mnemonicParsing="false" text="Chuyển khoản" toggleGroup="$tgMethod" />
+                              <RadioButton fx:id="radioBtnWallet" mnemonicParsing="false" text="Ví điện tử" toggleGroup="$tgMethod" />
+                           </children>
+                        </VBox>
+                        <Region prefHeight="59.0" prefWidth="84.0" />
+                        <Button fx:id="btnConfirm" mnemonicParsing="false" onAction="#handleConfirm" prefHeight="57.0" prefWidth="105.0" style="-fx-background-color: blue;" text="Chốt" textFill="#fdfafa">
+                           <font>
+                              <Font name="System Bold" size="19.0" />
+                           </font>
+                        </Button>
+                     </children>
+                  </HBox>
+               </children>
+            </VBox>
+         </children>
+      </VBox>
+   </center>
+   <bottom>
+      <TableView fx:id="tableOrder" prefHeight="131.0" prefWidth="600.0" BorderPane.alignment="CENTER">
+        <columns>
+          <TableColumn fx:id="colBatchOrder" prefWidth="108.6666259765625" text="Mã lô" />
+          <TableColumn fx:id="colProductOrder" prefWidth="186.00003051757812" text="Sản phẩm" />
+            <TableColumn fx:id="colQuanOrder" prefWidth="82.00003051757812" text="Số lượng" />
+            <TableColumn fx:id="colPrice" prefWidth="105.33331298828125" text="Giá" />
+            <TableColumn fx:id="colSum" prefWidth="117.33331298828125" text="Thành tiền" />
+        </columns>
+      </TableView>
+   </bottom>
+</BorderPane>

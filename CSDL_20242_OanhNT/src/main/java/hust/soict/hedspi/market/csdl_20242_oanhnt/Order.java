@@ -1,38 +1,30 @@
 package hust.soict.hedspi.market.csdl_20242_oanhnt;
 
-import java.time.LocalDate;
-
 public class Order {
-    private static int orderCount = 1;
-
     private String id;
-    private LocalDate orderDate;
-    private double total;
-    private String method;
-    private String customerPhone;
-    private String customerName;
-    private String employeeName;
+    private String date;
+    private int total;
+    private String paymentMethod;
+    private String phoneCustomer;
+    private String nameCustomer;
+    private String nameEmployee;
 
-    public Order(LocalDate orderDate, double total, String method, String customerPhone, String customerName, String employeeName) {
-        this.id = String.format("HD%03d", orderCount++);
-        this.orderDate = orderDate;
+    public Order(String id, String date, int total, String paymentMethod, String phoneCustomer, String nameCustomer, String nameEmployee) {
+        this.id = id;
+        this.date = date;
         this.total = total;
-        this.method = method;
-        this.customerPhone = customerPhone;
-        this.customerName = customerName;
-        this.employeeName = employeeName;
+        this.paymentMethod = paymentMethod;
+        this.phoneCustomer = phoneCustomer;
+        this.nameCustomer = nameCustomer;
+        this.nameEmployee = nameEmployee;
     }
 
-    public static void resetOrderCount() {
-        orderCount = 1;
-    }
-
-
+    // Getters
     public String getId() { return id; }
-    public LocalDate getOrderDate() { return orderDate; }
-    public double getTotal() { return total; }
-    public String getMethod() { return method; }
-    public String getCustomerPhone() { return customerPhone; }
-    public String getCustomerName() { return customerName; }
-    public String getEmployeeName() { return employeeName; }
+    public String getDate() { return date; }
+    public int getTotal() { return total; }
+    public String getPaymentMethod() { return paymentMethod; }
+    public String getPhoneCustomer() { return phoneCustomer; }
+    public String getNameCustomer() { return nameCustomer; }
+    public String getNameEmployee() { return nameEmployee; }
 }

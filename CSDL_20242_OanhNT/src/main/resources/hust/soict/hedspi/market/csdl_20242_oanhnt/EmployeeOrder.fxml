@@ -11,7 +11,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.EmployeeOrderController">
    <top>
       <HBox prefHeight="100.0" prefWidth="200.0" BorderPane.alignment="CENTER">
          <children>
@@ -20,7 +20,7 @@
                   <Insets left="8.0" top="8.0" />
                </HBox.margin>
             </Label>
-            <TextField promptText="Nhập nội dung">
+            <TextField fx:id="tfSearchField" promptText="Nhập SDT Khách hàng">
                <HBox.margin>
                   <Insets left="8.0" top="8.0" />
                </HBox.margin>
@@ -28,12 +28,12 @@
             <Region prefHeight="100.0" prefWidth="550.0" />
             <VBox prefHeight="100.0" prefWidth="170.0">
                <children>
-                  <Button mnemonicParsing="false" style="-fx-background-color: green;" text="Tạo hóa đơn mới" textFill="#fbf9f9">
+                  <Button fx:id="btnNewOrder" mnemonicParsing="false" onAction="#handleNewOrder" style="-fx-background-color: green;" text="Tạo hóa đơn mới" textFill="#fbf9f9">
                      <VBox.margin>
                         <Insets top="8.0" />
                      </VBox.margin></Button>
                   <Region prefHeight="10.0" prefWidth="170.0" />
-                  <Button mnemonicParsing="false" text="In hóa đơn mới" />
+                  <Button fx:id="btnPrint" mnemonicParsing="false" onAction="#handlePrint" text="In hóa đơn mới" />
                </children>
             </VBox>
          </children>
@@ -60,7 +60,7 @@
          </children></HBox>
    </bottom>
    <center>
-      <TableView BorderPane.alignment="CENTER">
+      <TableView fx:id="tableView" BorderPane.alignment="CENTER">
         <columns>
           <TableColumn fx:id="colID" prefWidth="96.0000330209732" text="Mã hóa đơn" />
           <TableColumn fx:id="colOrderDate" prefWidth="121.33333587646484" text="Ngày mua" />

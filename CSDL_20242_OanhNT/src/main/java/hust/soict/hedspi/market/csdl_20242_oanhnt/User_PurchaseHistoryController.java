@@ -3,6 +3,8 @@ package hust.soict.hedspi.market.csdl_20242_oanhnt;
 import java.util.ArrayList;
 import java.util.List;
 
+import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,24 +35,23 @@ public class User_PurchaseHistoryController {
     private TableColumn<InvoiceItem, Double> colUnitPrice;
 
     public void initialize() {
-        colInvoiceId.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getId()));
-        colDate.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getDate()));
+        // Thiết lập cột bảng hóa đơn
+        colInvoiceId.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getId()));
+        colDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDate()));
         colTotal.setCellValueFactory(data -> new SimpleStringProperty(String.format("%.0f", data.getValue().getTotal())));
-        colPaymentMethod.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getPaymentMethod()));
+        colPaymentMethod.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getPaymentMethod()));
 
-        colProductName.setCellValueFactory(data -> new javafx.beans.property.SimpleStringProperty(data.getValue().getProduct()));
-        colQuantity.setCellValueFactory(data -> new javafx.beans.property.SimpleIntegerProperty(data.getValue().getQuantity()).asObject());
-        colUnitPrice.setCellValueFactory(data -> new javafx.beans.property.SimpleDoubleProperty(data.getValue().getUnitPrice()).asObject());
+        // Thiết lập cột bảng chi tiết hóa đơn
+        colProductName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProduct()));
+        colQuantity.setCellValueFactory(data -> new SimpleIntegerProperty(data.getValue().getQuantity()).asObject());
+        colUnitPrice.setCellValueFactory(data -> new SimpleDoubleProperty(data.getValue().getUnitPrice()).asObject());
 
+        // Sự kiện chọn hóa đơn để hiển thị chi tiết
         invoiceTable.setOnMouseClicked(event -> {
             Invoice selected = invoiceTable.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                if (!invoiceDetailTable.isVisible()) {
-                    invoiceDetailTable.setItems(FXCollections.observableArrayList(selected.getItems()));
-                    invoiceDetailTable.setVisible(true);
-                } else {
-                    invoiceDetailTable.setVisible(false);
-                }
+                invoiceDetailTable.setItems(FXCollections.observableArrayList(selected.getItems()));
+                invoiceDetailTable.setVisible(true);
             }
         });
     }
