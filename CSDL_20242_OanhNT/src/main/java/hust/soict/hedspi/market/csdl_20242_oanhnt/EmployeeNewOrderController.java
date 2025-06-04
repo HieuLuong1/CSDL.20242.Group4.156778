@@ -77,9 +77,9 @@ public class EmployeeNewOrderController {
         );
 
         allBatches.addAll(
-                new Batch(1, LocalDate.now().minusDays(5), LocalDate.now().plusDays(30), 100, 10, "Sữa tươi", "Vinamilk"),
-                new Batch(2, LocalDate.now().minusDays(10), LocalDate.now().plusDays(60), 50, 5, "Sữa tươi", "TH True Milk"),
-                new Batch(3, LocalDate.now().minusDays(3), LocalDate.now().plusDays(40), 200, 100, "Nước khoáng", "LaVie")
+                new Batch(1, LocalDate.now().minusDays(5), LocalDate.now().plusDays(30), 100, 10, "Sữa tươi", "Vinamilk", 100000),
+                new Batch(2, LocalDate.now().minusDays(10), LocalDate.now().plusDays(60), 50, 5, "Sữa tươi", "TH True Milk", 200000),
+                new Batch(3, LocalDate.now().minusDays(3), LocalDate.now().plusDays(40), 200, 100, "Nước khoáng", "LaVie", 30000)
         );
     }
     private void searchBatchByProductName() {

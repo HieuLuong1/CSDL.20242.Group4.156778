@@ -50,9 +50,9 @@ public class Employee_BatchController {
 
 
         batchList.addAll(
-                new Batch(1, LocalDate.of(2025, 5, 1), LocalDate.of(2025, 8, 1), 100, 10, "Sữa TH True Milk", "TH Group"),
-                new Batch(2, LocalDate.of(2025, 5, 3), LocalDate.of(2025, 9, 1), 150, 20, "Bánh Oreo", "Mondelez"),
-                new Batch(3, LocalDate.of(2025, 5, 5), LocalDate.of(2025, 12, 31), 200, 50, "Coca-Cola lon", "Coca-Cola Việt Nam")
+                new Batch(1, LocalDate.of(2025, 5, 1), LocalDate.of(2025, 8, 1), 100, 10, "Sữa TH True Milk", "TH Group", 10000),
+                new Batch(2, LocalDate.of(2025, 5, 3), LocalDate.of(2025, 9, 1), 150, 20, "Bánh Oreo", "Mondelez", 200000),
+                new Batch(3, LocalDate.of(2025, 5, 5), LocalDate.of(2025, 12, 31), 200, 50, "Coca-Cola lon", "Coca-Cola Việt Nam", 300000)
         );
 
         batchTable.setItems(batchList);
