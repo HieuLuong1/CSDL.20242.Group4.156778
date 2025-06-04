@@ -7,10 +7,12 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 public class User_MainController {
-
+    @FXML
+    private StackPane contentArea;
     @FXML
     private Label welcomeLabel;
 
@@ -28,11 +30,11 @@ public class User_MainController {
 
             User_InfoController infoController = loader.getController();
             infoController.setUserInfo(customer.getFullName(), customer.getPhone(), customer.getEmail());
-
-            Stage stage = new Stage();
-            stage.setTitle("Thông tin cá nhân");
-            stage.setScene(new Scene(root));
-            stage.show();
+            contentArea.getChildren().setAll(root);
+            //Stage stage = new Stage();
+            //stage.setTitle("Thông tin cá nhân");
+            //stage.setScene(new Scene(root));
+            //stage.show();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -45,11 +47,11 @@ public class User_MainController {
 
             User_PurchaseHistoryController controller = loader.getController();
             controller.loadInvoices();
-
-            Stage stage = new Stage();
-            stage.setTitle("Lịch sử mua hàng");
-            stage.setScene(new Scene(root));
-            stage.show();
+            contentArea.getChildren().setAll(root);
+            //Stage stage = new Stage();
+            //stage.setTitle("Lịch sử mua hàng");
+            //stage.setScene(new Scene(root));
+            //stage.show();
         } catch (IOException e) {
             e.printStackTrace();
         }

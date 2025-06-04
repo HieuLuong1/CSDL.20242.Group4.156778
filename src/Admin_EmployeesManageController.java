@@ -16,7 +16,7 @@ import javafx.scene.control.TextField;
 public class Admin_EmployeesManageController {
     @FXML private TableView<Employee> employeeTable;
     @FXML private TableColumn<Employee, String> colId, colName, colGender, colDob, colEmail, colPhone, colAddress, colIdCard;
-
+    @FXML private TextField tfSearchField;
     @FXML private TextField tfId, tfName, tfGender, tfDob, tfEmail, tfPhone, tfAddress, tfIdCard;
     @FXML private Button btnAdd, btnMark;
     @FXML private DatePicker dpWorkDate;
@@ -39,8 +39,8 @@ public class Admin_EmployeesManageController {
         colIdCard.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getIdCard()));
 
         employeeList.addAll(
-            new Employee("NV001", "Nguyen Van A", "01/01/1990", "Nam", "a@gmail.com", "0123456789", "Hanoi", "0011001100"),
-            new Employee("NV002", "Tran Thi B", "12/03/1995", "Nu", "b@gmail.com", "0987654321", "HCM", "0022002200")
+                new Employee("NV001", "Nguyen Van A", "01/01/1990", "Nam", "a@gmail.com", "0123456789", "Hanoi", "0011001100"),
+                new Employee("NV002", "Tran Thi B", "12/03/1995", "Nu", "b@gmail.com", "0987654321", "HCM", "0022002200")
         );
         employeeTable.setItems(employeeList);
 
@@ -80,6 +80,22 @@ public class Admin_EmployeesManageController {
             }
             workMap.put(id, record);
             updateAttendanceSummary(id);
+        });
+        tfSearchField.textProperty().addListener((obs, oldText, newText) -> {
+            String lowerCaseFilter = newText.toLowerCase();
+
+            ObservableList<Employee> filteredList = employeeList.filtered(emp ->
+                    emp.getId().toLowerCase().contains(lowerCaseFilter) ||
+                            emp.getFullName().toLowerCase().contains(lowerCaseFilter) ||
+                            emp.getGender().toLowerCase().contains(lowerCaseFilter) ||
+                            emp.getDob().toLowerCase().contains(lowerCaseFilter) ||
+                            emp.getEmail().toLowerCase().contains(lowerCaseFilter) ||
+                            emp.getPhone().toLowerCase().contains(lowerCaseFilter) ||
+                            emp.getAddress().toLowerCase().contains(lowerCaseFilter) ||
+                            emp.getIdCard().toLowerCase().contains(lowerCaseFilter)
+            );
+
+            employeeTable.setItems(filteredList);
         });
     }
 

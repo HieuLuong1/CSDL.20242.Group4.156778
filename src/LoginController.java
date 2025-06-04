@@ -30,14 +30,14 @@ public class LoginController {
 
     @FXML
     public void initialize() {
-    	accountPassword.put("customer01", "123456");
+        accountPassword.put("customer01", "123456");
         accountRole.put("customer01", "customer");
         customerAccounts.put("customer01", new Customer("KH001", "Nguyễn Văn A", "nva@gmail.com", "0123456789"));
 
         accountPassword.put("employee01", "abc123");
         accountRole.put("employee01", "employee");
         employeeAccounts.put("employee01", new Employee("NV001", "Trần Thị B", "12/03/1998", "Nữ", "tranb@gmail.com", "0987654321", "Hà Nội", "123456789012"));
-        
+
         accountPassword.put("admin01", "admin123");
         accountRole.put("admin01", "admin");
         adminAccounts.put("admin01", new Admin("AD001", "Quản lý siêu thị", "admin@gmail.com", "0123456789"));
@@ -73,7 +73,7 @@ public class LoginController {
                 stage.setTitle("Trang người dùng");
             }
             else if (role.equals("employee")) {
-            	FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_MainLayout.fxml"));
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_MainLayout.fxml"));
                 Parent root = loader.load();
 
                 Employee_MainController controller = loader.getController();

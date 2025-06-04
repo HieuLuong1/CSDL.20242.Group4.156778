@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="Admin_CreateReportController">
+
+    <top>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10" />
+            </padding>
+            <children>
+                <Label text="Tạo biên bản mới" style="-fx-font-size: 18px; -fx-font-weight: bold;" />
+                <HBox spacing="10">
+                    <children>
+                        <Label text="Mã biên bản:" />
+                        <TextField fx:id="tfReportId" promptText="Nhập mã biên bản" prefWidth="200"/>
+                        <Label text="Ngày lập:" />
+                        <DatePicker fx:id="dpReportDate" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </top>
+
+    <center>
+        <VBox spacing="10">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10" />
+            </padding>
+            <children>
+                <HBox spacing="10" alignment="CENTER_RIGHT">
+                    <children>
+                        <Button fx:id="btnSortExpiry" text="Sắp xếp theo hạn sử dụng" />
+                    </children>
+                </HBox>
+
+                <TableView fx:id="batchTable" prefHeight="300">
+                    <columns>
+                        <TableColumn fx:id="colBatchId" text="Mã lô" prefWidth="80"/>
+                        <TableColumn fx:id="colProduct" text="Sản phẩm" prefWidth="150"/>
+                        <TableColumn fx:id="colImportDate" text="Ngày nhập" prefWidth="100"/>
+                        <TableColumn fx:id="colExpiryDate" text="Hạn sử dụng" prefWidth="100"/>
+                        <TableColumn fx:id="colQuantity" text="Số lượng còn" prefWidth="100"/>
+                        <TableColumn fx:id="colSelect" text="Chọn" prefWidth="60"/>
+                    </columns>
+                </TableView>
+            </children>
+        </VBox>
+    </center>
+
+    <bottom>
+        <HBox spacing="10" alignment="CENTER_RIGHT">
+            <padding>
+                <Insets top="10" right="10" bottom="10" left="10" />
+            </padding>
+            <children>
+                <Button fx:id="btnCancel" text="Hủy" />
+                <Button fx:id="btnCreate" text="Tạo biên bản" />
+            </children>
+        </HBox>
+    </bottom>
+</BorderPane>

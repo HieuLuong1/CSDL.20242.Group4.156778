@@ -10,26 +10,26 @@
         <VBox alignment="TOP_LEFT" spacing="15" AnchorPane.leftAnchor="30" AnchorPane.topAnchor="20">
             <children>
                 <Label style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Thông tin cá nhân" />
-                
+
                 <HBox spacing="10">
-                   <children>
-                       <Label minWidth="100" text="Họ tên:" />
-                       <Label fx:id="nameLabel" text="ABC" />
-                   </children>
+                    <children>
+                        <Label minWidth="100" text="Họ tên:" />
+                        <Label fx:id="nameLabel" text="ABC" />
+                    </children>
                 </HBox>
 
                 <HBox spacing="10">
-   <children>
-                       <Label minWidth="100" text="Số điện thoại:" />
-                       <Label fx:id="phoneLabel" text="0123456789" />
-   </children>
+                    <children>
+                        <Label minWidth="100" text="Số điện thoại:" />
+                        <Label fx:id="phoneLabel" text="0123456789" />
+                    </children>
                 </HBox>
 
                 <HBox spacing="10">
-   <children>
-                       <Label minWidth="100" text="Email:" />
-                       <Label fx:id="emailLabel" text="abc@gmail.com" />
-   </children>
+                    <children>
+                        <Label minWidth="100" text="Email:" />
+                        <Label fx:id="emailLabel" text="abc@gmail.com" />
+                    </children>
                 </HBox>
             </children>
         </VBox>
