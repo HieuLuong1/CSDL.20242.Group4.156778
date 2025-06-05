@@ -17,6 +17,7 @@ create table customer (
     email varchar(100)
 );
 
+
 create table categories (
     category_id serial primary key,
     category_name varchar(100)
@@ -85,7 +86,8 @@ create table batch (
     quantity_in_stock int,
     product_id int,
     supplier_id int,
-    import_id int
+    import_id int,
+	value_batch int 
 );
 
 create table orders (
