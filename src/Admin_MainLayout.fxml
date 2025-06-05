@@ -55,6 +55,7 @@
 
 				<Button fx:id="btnSupplier" mnemonicParsing="false" onAction="#handleSup" prefHeight="25.0" prefWidth="160.0" text="Nhà cung cấp" />
             <Button fx:id="btnReport" mnemonicParsing="false" onAction="#handleReport" prefHeight="25.0" prefWidth="160.0" text="Biên bản xử lý" />
+            <Button fx:id="btnInventoryReport" mnemonicParsing="false" onAction="#handleInventoryReport" prefHeight="25.0" prefWidth="160.0" text="Biên bản kiểm kê" />
 			</children>
 			<padding>
 				<Insets bottom="20" left="20" right="20" top="20" />

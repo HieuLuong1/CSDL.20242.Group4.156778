@@ -19,6 +19,7 @@
 					<columns>
 						<TableColumn fx:id="colReportId" prefWidth="100" text="Mã biên bản" />
 						<TableColumn fx:id="colDate" prefWidth="120" text="Ngày lập" />
+						<TableColumn fx:id="colMethod" prefWidth="120" text="Nội dung xử lý" />
 					</columns>
                <columnResizePolicy>
                   <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
