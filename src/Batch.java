@@ -1,8 +1,5 @@
 import java.time.LocalDate;
 
-import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
-
 public class Batch {
     private int batchId;
     private LocalDate importDate;
