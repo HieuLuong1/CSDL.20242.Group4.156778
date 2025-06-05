@@ -18,7 +18,7 @@ public class Admin_CreateReportController {
 	@FXML private TableView<BatchWrapper> batchTable;
 	@FXML private TableColumn<BatchWrapper, String> colBatchId, colProduct, colImportDate, colExpiryDate, colQuantity;
 	@FXML private TableColumn<BatchWrapper, Boolean> colSelect;
-	@FXML private Button btnSortExpiry, btnCreate, btnCancel;
+	@FXML private Button btnCreate, btnCancel;
 
 	private final ObservableList<BatchWrapper> batchList = FXCollections.observableArrayList();
 	private ObservableList<Report> reportList;
@@ -28,7 +28,6 @@ public class Admin_CreateReportController {
 	}
 	@FXML
 	public void initialize() {
-		// Set up columns
 		colBatchId.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getBatch().getBatchId())));
 		colProduct.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getBatch().getProductName()));
 		colImportDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getBatch().getImportDate().toString()));
@@ -40,12 +39,9 @@ public class Admin_CreateReportController {
 		colSelect.setCellValueFactory(cellData -> cellData.getValue().selectedProperty());
 		colSelect.setCellFactory(CheckBoxTableCell.forTableColumn(colSelect));
 
-		// Load expired batches as example
 		loadExpiredBatches();
 
 		batchTable.setItems(batchList);
-
-		btnSortExpiry.setOnAction(e -> sortByExpiryDate());
 		btnCreate.setOnAction(e -> createReport());
 		batchTable.setEditable(true);
 		colSelect.setEditable(true);
@@ -65,12 +61,6 @@ public class Admin_CreateReportController {
 				batchList.add(new BatchWrapper(batch));
 			}
 		}
-	}
-
-	private void sortByExpiryDate() {
-		FXCollections.sort(batchList, (b1, b2) ->
-		b1.getBatch().getExpiryDate().compareTo(b2.getBatch().getExpiryDate())
-				);
 	}
 
 	private void createReport() {
@@ -95,10 +85,9 @@ public class Admin_CreateReportController {
 		}
 
 		Report newReport = new Report(reportId, date, selectedBatches);
-		showAlert("Tạo biên bản thành công với " + selectedBatches.size() + " lô hàng.");
 		reportList.add(newReport);
 		batchList.removeIf(wrapper -> wrapper.isSelected());
-	    batchTable.refresh(); 
+		batchTable.refresh(); 
 	}
 
 	private void showAlert(String message) {

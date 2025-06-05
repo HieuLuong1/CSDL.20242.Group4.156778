@@ -105,4 +105,14 @@ public class Admin_MainController {
             e.printStackTrace();
         }
     }
+    @FXML
+    private void handleSalaryManage(){
+        try{
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Admin_SalaryManage.fxml"));
+            Parent root = loader.load();
+            contentArea.getChildren().setAll(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 }

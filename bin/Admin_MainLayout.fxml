@@ -50,7 +50,7 @@
 				<Button fx:id="btnEmployees" maxWidth="160" onAction="#handleManageEmployees" text="Quản lý nhân viên" />
 
 				<Button fx:id="btnUpdateStock" maxWidth="160" onAction="#handleStorage" text="Quản lý kho" />
-				<Button maxWidth="160" text="Lương" />
+				<Button fx:id="btnSalaryManage" maxWidth="160" onAction="#handleSalaryManage" text="Lương" />
 				<Button fx:id="btnImport" maxWidth="160" onAction="#handleImport" text="Nhập hàng" />
 
 				<Button fx:id="btnSupplier" mnemonicParsing="false" onAction="#handleSup" prefHeight="25.0" prefWidth="160.0" text="Nhà cung cấp" />
