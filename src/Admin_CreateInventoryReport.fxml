@@ -38,6 +38,9 @@
 				<TableColumn fx:id="colSelect" prefWidth="60" text="Chọn">
 				</TableColumn>
 			</columns>
+         <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+         </columnResizePolicy>
 		</TableView>
 	</center>
 
