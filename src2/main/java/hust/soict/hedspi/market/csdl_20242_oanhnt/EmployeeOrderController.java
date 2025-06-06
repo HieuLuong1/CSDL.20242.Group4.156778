@@ -11,15 +11,20 @@ import javafx.stage.Stage;
 
 import java.net.URL;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
 public class EmployeeOrderController implements Initializable {
-    @FXML private Button btnNewOrder, btnPrint;
+    @FXML private Button btnNewOrder;
+    @FXML private Button btnPrint;
     @FXML private TableView<Invoice> tableView;
-    @FXML private TableColumn<Invoice, String> colEmp, colID, colMethod, colName, colOrderDate, colPhone;
+    @FXML private TableColumn<Invoice, String> colEmp;
+    @FXML private TableColumn<Invoice, String> colID;
+    @FXML private TableColumn<Invoice, String> colMethod;
+    @FXML private TableColumn<Invoice, String> colName;
+    @FXML private TableColumn<Invoice, String> colOrderDate;
+    @FXML private TableColumn<Invoice, String> colPhone;
     @FXML private TableColumn<Invoice, Double> colTotal;
     @FXML private Label lbSumCustomer;
     @FXML private TextField tfSearchField;
@@ -28,6 +33,7 @@ public class EmployeeOrderController implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        // Thiết lập column
         colID.setCellValueFactory(new PropertyValueFactory<>("id"));
         colOrderDate.setCellValueFactory(new PropertyValueFactory<>("date"));
         colTotal.setCellValueFactory(new PropertyValueFactory<>("total"));
@@ -38,23 +44,33 @@ public class EmployeeOrderController implements Initializable {
 
         loadOrdersFromDB();
 
-        tfSearchField.textProperty().addListener((observable, oldValue, newValue) -> searchInvoiceByPhone(newValue));
+        tfSearchField.textProperty().addListener((observable, oldValue, newValue) ->
+            searchInvoiceByPhone(newValue)
+        );
 
         btnPrint.setDisable(true);
-        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            btnPrint.setDisable(newSelection == null);
+        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
+            btnPrint.setDisable(newSel == null);
         });
     }
 
     private void loadOrdersFromDB() {
         allInvoices.clear();
         try (Connection conn = DBConnection.getConnection()) {
-            String sql = "SELECT o.order_id, o.order_date, o.total_amount, o.payment_method, " +
-                         "c.fullname AS customer_name, c.phone, " +
-                         "e.firstname || ' ' || e.lastname AS emp_name " +
-                         "FROM orders o " +
-                         "JOIN customer c ON o.customer_id = c.customer_id " +
-                         "JOIN employee e ON o.employee_id = e.employee_id";
+            // Cần SELECT: order_id, order_date, total_amount, payment_method, customer_name, phone, employee_name
+            String sql =
+                "SELECT " +
+                "  o.order_id, " +
+                "  o.order_date, " +
+                "  o.total_amount, " +
+                "  o.payment_method, " +
+                "  c.fullname AS customer_name, " +
+                "  c.phone, " +
+                "  e.firstname || ' ' || e.lastname AS emp_name " +
+                "FROM orders o " +
+                "  JOIN customer c ON o.customer_id = c.customer_id " +
+                "  JOIN employee e ON o.employee_id = e.employee_id";
+
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
 
@@ -67,6 +83,7 @@ public class EmployeeOrderController implements Initializable {
                 String custName = rs.getString("customer_name");
                 String empName = rs.getString("emp_name");
 
+                // Lấy chi tiết cho mỗi order
                 List<InvoiceItem> items = getOrderDetailsFromDB(rs.getInt("order_id"), conn);
                 Invoice invoice = new Invoice(id, date, method, phone, custName, empName, items);
                 allInvoices.add(invoice);
@@ -74,7 +91,9 @@ public class EmployeeOrderController implements Initializable {
 
             tableView.getItems().setAll(allInvoices);
             lbSumCustomer.setText(String.valueOf(allInvoices.size()));
-            rs.close(); stmt.close();
+
+            rs.close();
+            stmt.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -82,20 +101,30 @@ public class EmployeeOrderController implements Initializable {
 
     private List<InvoiceItem> getOrderDetailsFromDB(int orderId, Connection conn) throws SQLException {
         List<InvoiceItem> items = new ArrayList<>();
-        String sql = "SELECT od.batch_id, od.quantity, p.product_name, p.price_with_tax FROM order_details od " +
-                     "JOIN batch b ON od.batch_id = b.batch_id " +
-                     "JOIN products p ON b.product_id = p.product_id " +
-                     "WHERE od.order_id = ?";
+        // Cần SELECT đúng: od.batch_id, od.quantity, p.product_name, p.price_with_tax
+        String sql =
+            "SELECT " +
+            "  od.batch_id, " +
+            "  od.quantity, " +
+            "  p.product_name, " +
+            "  p.price_with_tax " +
+            "FROM order_details od " +
+            "  JOIN batch b ON od.batch_id = b.batch_id " +
+            "  JOIN products p ON b.product_id = p.product_id " +
+            "WHERE od.order_id = ?";
+
         PreparedStatement stmt = conn.prepareStatement(sql);
         stmt.setInt(1, orderId);
         ResultSet rs = stmt.executeQuery();
+
         while (rs.next()) {
             String product = rs.getString("product_name");
             int quantity = rs.getInt("quantity");
             double price = rs.getDouble("price_with_tax");
             items.add(new InvoiceItem(product, quantity, price));
         }
-        rs.close(); stmt.close();
+        rs.close();
+        stmt.close();
         return items;
     }
 

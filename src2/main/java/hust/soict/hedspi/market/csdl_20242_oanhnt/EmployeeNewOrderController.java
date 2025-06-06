@@ -10,22 +10,30 @@ import javafx.stage.Stage;
 
 import java.sql.*;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 public class EmployeeNewOrderController {
-    @FXML private TextField tfOrderID, tfNameProduct, tfQuantity, tfPhone, tfEmp, tfNameCustomer;
+    @FXML private TextField tfOrderID;
+    @FXML private TextField tfNameProduct;
+    @FXML private TextField tfQuantity;
+    @FXML private TextField tfPhone;
+    @FXML private TextField tfEmp;
+    @FXML private TextField tfNameCustomer;
     @FXML private TableView<Batch> tbBatch;
-    @FXML private TableColumn<Batch, Integer> colBatchID, colTotalQuan, colQuanInStock;
+    @FXML private TableColumn<Batch, Integer> colBatchID;
+    @FXML private TableColumn<Batch, Integer> colTotalQuan;
+    @FXML private TableColumn<Batch, Integer> colQuanInStock;
     @FXML private TableView<InvoiceItem> tableOrder;
     @FXML private TableColumn<InvoiceItem, Integer> colBatchOrder;
     @FXML private TableColumn<InvoiceItem, String> colProductOrder;
     @FXML private TableColumn<InvoiceItem, Integer> colQuanOrder;
-    @FXML private TableColumn<InvoiceItem, Double> colPrice, colSum;
+    @FXML private TableColumn<InvoiceItem, Double> colPrice;
+    @FXML private TableColumn<InvoiceItem, Double> colSum;
     @FXML private DatePicker dpOrderDate;
     @FXML private Label lbTotalMoney;
     @FXML private Button btnConfirm;
-    @FXML private RadioButton radioBtnCash, radioBtnCard, radioBtnWallet;
+    @FXML private RadioButton radioBtnCash;
+    @FXML private RadioButton radioBtnCard;
+    @FXML private RadioButton radioBtnWallet;
 
     private ObservableList<Batch> allBatches = FXCollections.observableArrayList();
     private ObservableList<Item> allItems = FXCollections.observableArrayList();
@@ -42,23 +50,27 @@ public class EmployeeNewOrderController {
         totalMoney = 0.0;
         updateTotalMoneyLabel();
 
+        // Thiết lập cột lô hàng
         colBatchID.setCellValueFactory(new PropertyValueFactory<>("batchId"));
         colTotalQuan.setCellValueFactory(new PropertyValueFactory<>("totalQuantity"));
         colQuanInStock.setCellValueFactory(cellData ->
-                Bindings.createIntegerBinding(() ->
-                        cellData.getValue().getTotalQuantity() - cellData.getValue().getSoldQuantity()).asObject());
-
+            Bindings.createIntegerBinding(() ->
+                cellData.getValue().getTotalQuantity() - cellData.getValue().getSoldQuantity()
+            ).asObject()
+        );
         tbBatch.setItems(FXCollections.observableArrayList());
 
+        // Thiết lập cột đơn hàng
         colBatchOrder.setCellValueFactory(new PropertyValueFactory<>("batchId"));
         colProductOrder.setCellValueFactory(new PropertyValueFactory<>("product"));
         colQuanOrder.setCellValueFactory(new PropertyValueFactory<>("quantity"));
         colPrice.setCellValueFactory(new PropertyValueFactory<>("unitPrice"));
         colSum.setCellValueFactory(new PropertyValueFactory<>("total"));
-
         tableOrder.setItems(orderItems);
 
         loadBatchesFromDB();
+
+        // Tìm lọc theo tên sản phẩm
         tfNameProduct.textProperty().addListener((obs, oldVal, newVal) -> searchBatchByProductName());
     }
 
@@ -68,30 +80,64 @@ public class EmployeeNewOrderController {
 
     private void loadBatchesFromDB() {
         allBatches.clear();
+        allItems.clear();
+
         try (Connection conn = DBConnection.getConnection()) {
-            String sql = "SELECT b.batch_id, b.import_date, b.expiration_date, b.total_quantity, b.quantity_in_stock, " +
-                         "p.product_name, s.supplier_name, b.value_batch, p.price_with_tax " +
-                         "FROM batch b " +
-                         "JOIN products p ON b.product_id = p.product_id " +
-                         "JOIN suppliers s ON b.supplier_id = s.supplier_id";
+            // KẾT QUẢ cần: batch_id, import_date, expiration_date, total_quantity, quantity_in_stock,
+            //              product_name, supplier_name, value_batch, price_with_tax
+            String sql =
+                "SELECT " +
+                "  b.batch_id, " +
+                "  b.import_date, " +
+                "  b.expiration_date, " +
+                "  b.total_quantity, " +
+                "  b.quantity_in_stock, " +
+                "  p.product_name, " +
+                "  s.supplier_name, " +
+                "  b.value_batch, " +
+                "  p.price_with_tax " +
+                "FROM batch b " +
+                "  JOIN products p ON b.product_id = p.product_id " +
+                "  JOIN import_reports ir ON b.import_id = ir.import_id " +
+                "  JOIN suppliers s ON ir.supplier_id = s.supplier_id";
+
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
+
             while (rs.next()) {
                 int batchId = rs.getInt("batch_id");
                 LocalDate importDate = rs.getDate("import_date").toLocalDate();
-                LocalDate expDate = rs.getDate("expiration_date").toLocalDate();
+
+                Date expDateRaw = rs.getDate("expiration_date");
+                LocalDate expDate = (expDateRaw != null) ? expDateRaw.toLocalDate() : null;
+
                 int totalQty = rs.getInt("total_quantity");
                 int inStock = rs.getInt("quantity_in_stock");
                 int soldQty = totalQty - inStock;
                 String productName = rs.getString("product_name");
-                String supplier = rs.getString("supplier_name");
-                int value = rs.getInt("value_batch");
+                String supplierName = rs.getString("supplier_name");
+                int valueBatch = rs.getInt("value_batch");
                 double price = rs.getDouble("price_with_tax");
 
-                allBatches.add(new Batch(batchId, importDate, expDate, totalQty, soldQty, productName, supplier, value));
-                allItems.add(new Item(productName, "", price, 0, "", supplier));
+                // Tạo đối tượng Batch để hiển thị trong tbBatch
+                allBatches.add(new Batch(
+                    batchId,
+                    importDate,
+                    expDate,
+                    totalQty,
+                    soldQty,
+                    productName,
+                    supplierName,
+                    valueBatch
+                ));
+
+                // Tạo một Item tạm để lưu giá và supplier, phục vụ khi tính tiền
+                allItems.add(new Item(productName, "", price, 0, "", supplierName));
             }
+
             tbBatch.setItems(allBatches);
+            rs.close();
+            stmt.close();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -99,7 +145,10 @@ public class EmployeeNewOrderController {
 
     private void searchBatchByProductName() {
         String keyword = tfNameProduct.getText().trim().toLowerCase();
-        if (keyword.isEmpty()) return;
+        if (keyword.isEmpty()) {
+            tbBatch.setItems(allBatches);
+            return;
+        }
         ObservableList<Batch> filtered = FXCollections.observableArrayList();
         for (Batch b : allBatches) {
             if (b.getProductName().toLowerCase().contains(keyword)) {
@@ -128,21 +177,34 @@ public class EmployeeNewOrderController {
             showAlert("Số lượng vượt quá số lượng còn lại.");
             return;
         }
+
+        // Tìm Item tương ứng để lấy giá và supplier
         Item matchedItem = null;
         for (Item item : allItems) {
-            if (item.getName().equals(selected.getProductName()) &&
-                    item.getSupplier().equals(selected.getSupplier())) {
-                matchedItem = item; break;
+            if (item.getName().equals(selected.getProductName())
+                && item.getSupplier().equals(selected.getSupplier())) {
+                matchedItem = item;
+                break;
             }
         }
         if (matchedItem == null) {
             showAlert("Không tìm thấy sản phẩm tương ứng.");
             return;
         }
+
         double price = matchedItem.getPrice();
         double total = price * quantity;
 
-        orderItems.add(new InvoiceItem(selected.getBatchId(), selected.getProductName(), quantity, price, total));
+        // Thêm vào InvoiceItem
+        orderItems.add(new InvoiceItem(
+            selected.getBatchId(),
+            selected.getProductName(),
+            quantity,
+            price,
+            total
+        ));
+
+        // Cập nhật số đã bán và tổng tiền
         selected.setSoldQuantity(selected.getSoldQuantity() + quantity);
         totalMoney += total;
         updateTotalMoneyLabel();
@@ -176,39 +238,53 @@ public class EmployeeNewOrderController {
         String nameEmployee = tfEmp.getText().trim();
         LocalDate dateValue = dpOrderDate.getValue();
 
-        String paymentMethod = radioBtnCash.isSelected() ? "Tien mat" :
-                               radioBtnCard.isSelected() ? "Chuyen khoan" :
-                               radioBtnWallet.isSelected() ? "Vi dien tu" : "";
+        String paymentMethod = radioBtnCash.isSelected() ?
+            "Tien mat" :
+            radioBtnCard.isSelected() ?
+                "Chuyen khoan" :
+                radioBtnWallet.isSelected() ?
+                    "Vi dien tu" : "";
 
-        if (nameCustomer.isEmpty() || phoneCustomer.isEmpty() || nameEmployee.isEmpty() ||
-                dateValue == null || paymentMethod.isEmpty()) {
+        if (nameCustomer.isEmpty() ||
+            phoneCustomer.isEmpty() ||
+            nameEmployee.isEmpty() ||
+            dateValue == null ||
+            paymentMethod.isEmpty()) {
             showAlert("Vui lòng nhập đầy đủ thông tin.");
             return null;
         }
 
         try (Connection conn = DBConnection.getConnection()) {
+            // 1. Tìm hoặc chèn Customer
             int customerId = findCustomerId(phoneCustomer, conn);
             if (customerId == -1) {
                 PreparedStatement insertCustomer = conn.prepareStatement(
-                    "INSERT INTO customer(fullname, phone, email) VALUES (?, ?, ?) RETURNING customer_id");
+                    "INSERT INTO customer(fullname, phone, email) VALUES (?, ?, ?) RETURNING customer_id"
+                );
                 insertCustomer.setString(1, nameCustomer);
                 insertCustomer.setString(2, phoneCustomer);
                 insertCustomer.setString(3, "");
                 ResultSet rs = insertCustomer.executeQuery();
-                if (rs.next()) customerId = rs.getInt(1);
-                rs.close(); insertCustomer.close();
+                if (rs.next()) {
+                    customerId = rs.getInt(1);
+                }
+                rs.close();
+                insertCustomer.close();
             }
 
+            // 2. Tìm Employee (theo firstname và lastname)
             int employeeId = findEmployeeIdByName(nameEmployee, conn);
             if (employeeId == -1) {
                 showAlert("Không tìm thấy nhân viên.");
                 return null;
             }
 
+            // 3. Insert vào orders
             double totalAmount = totalMoney;
             PreparedStatement insertOrder = conn.prepareStatement(
                 "INSERT INTO orders(order_date, total_amount, payment_method, customer_id, employee_id) " +
-                "VALUES (?, ?, ?, ?, ?) RETURNING order_id");
+                "VALUES (?, ?, ?, ?, ?) RETURNING order_id"
+            );
             insertOrder.setDate(1, Date.valueOf(dateValue));
             insertOrder.setDouble(2, totalAmount);
             insertOrder.setString(3, paymentMethod);
@@ -217,12 +293,17 @@ public class EmployeeNewOrderController {
 
             ResultSet rsOrder = insertOrder.executeQuery();
             int newOrderId = -1;
-            if (rsOrder.next()) newOrderId = rsOrder.getInt(1);
-            rsOrder.close(); insertOrder.close();
+            if (rsOrder.next()) {
+                newOrderId = rsOrder.getInt(1);
+            }
+            rsOrder.close();
+            insertOrder.close();
 
+            // 4. Insert chi tiết vào order_details và cập nhật batch.quantity_in_stock
             for (InvoiceItem item : orderItems) {
                 PreparedStatement detailStmt = conn.prepareStatement(
-                    "INSERT INTO order_details(order_id, batch_id, quantity) VALUES (?, ?, ?)");
+                    "INSERT INTO order_details(order_id, batch_id, quantity) VALUES (?, ?, ?)"
+                );
                 detailStmt.setInt(1, newOrderId);
                 detailStmt.setInt(2, item.getBatchId());
                 detailStmt.setInt(3, item.getQuantity());
@@ -230,18 +311,27 @@ public class EmployeeNewOrderController {
                 detailStmt.close();
 
                 PreparedStatement updateStockStmt = conn.prepareStatement(
-                    "UPDATE batch SET quantity_in_stock = quantity_in_stock - ? WHERE batch_id = ?");
+                    "UPDATE batch SET quantity_in_stock = quantity_in_stock - ? WHERE batch_id = ?"
+                );
                 updateStockStmt.setInt(1, item.getQuantity());
                 updateStockStmt.setInt(2, item.getBatchId());
                 updateStockStmt.executeUpdate();
                 updateStockStmt.close();
             }
 
-            Invoice newInvoice = new Invoice("HD" + String.format("%03d", newOrderId),
-                    dateValue.toString(), paymentMethod, phoneCustomer,
-                    nameCustomer, nameEmployee, orderItems);
+            // 5. Gửi Invoice mới lên bảng bên màn hình chính
+            Invoice newInvoice = new Invoice(
+                "HD" + String.format("%03d", newOrderId),
+                dateValue.toString(),
+                paymentMethod,
+                phoneCustomer,
+                nameCustomer,
+                nameEmployee,
+                orderItems
+            );
             parentController.addNewInvoice(newInvoice);
 
+            // 6. Đóng cửa sổ
             Stage stage = (Stage) btnConfirm.getScene().getWindow();
             stage.close();
             return orderItems;
@@ -254,22 +344,41 @@ public class EmployeeNewOrderController {
     }
 
     private int findCustomerId(String phone, Connection conn) throws SQLException {
-        PreparedStatement stmt = conn.prepareStatement("SELECT customer_id FROM customer WHERE phone = ?");
+        PreparedStatement stmt = conn.prepareStatement(
+            "SELECT customer_id FROM customer WHERE phone = ?"
+        );
         stmt.setString(1, phone);
         ResultSet rs = stmt.executeQuery();
-        if (rs.next()) return rs.getInt("customer_id");
+        if (rs.next()) {
+            int id = rs.getInt("customer_id");
+            rs.close();
+            stmt.close();
+            return id;
+        }
+        rs.close();
+        stmt.close();
         return -1;
     }
 
     private int findEmployeeIdByName(String name, Connection conn) throws SQLException {
+        // Giả sử name = "Firstname Lastname"
         String[] parts = name.trim().split(" ", 2);
         if (parts.length < 2) return -1;
         String first = parts[0], last = parts[1];
-        PreparedStatement stmt = conn.prepareStatement("SELECT employee_id FROM employee WHERE firstname = ? AND lastname = ?");
+        PreparedStatement stmt = conn.prepareStatement(
+            "SELECT employee_id FROM employee WHERE firstname = ? AND lastname = ?"
+        );
         stmt.setString(1, first);
         stmt.setString(2, last);
         ResultSet rs = stmt.executeQuery();
-        if (rs.next()) return rs.getInt("employee_id");
+        if (rs.next()) {
+            int id = rs.getInt("employee_id");
+            rs.close();
+            stmt.close();
+            return id;
+        }
+        rs.close();
+        stmt.close();
         return -1;
     }
 

@@ -90,12 +90,14 @@ public class Employee_StoreManageController {
         items.clear();
         try {
             Connection conn = DBConnection.getConnection();
-            String sql = "SELECT p.product_id, p.product_name, p.unit, p.price_with_tax, p.quantity_in_stock, " +
-                         "c.category_name, s.supplier_name " +
-                         "FROM products p " +
-                         "LEFT JOIN categories c ON p.category_id = c.category_id " +
-                         "LEFT JOIN batch b ON p.product_id = b.product_id " +
-                         "LEFT JOIN suppliers s ON b.supplier_id = s.supplier_id";
+            String sql =  "SELECT p.product_id, p.product_name, p.unit, p.price_with_tax, p.quantity_in_stock, " +
+            	    "c.category_name, s.supplier_name " +
+            	    "FROM products p " +
+            	    "JOIN categories c ON p.category_id = c.category_id " +
+            	    "JOIN batch b ON p.product_id = b.product_id " +
+            	    "JOIN import_reports ir ON b.import_id = ir.import_id " +
+            	    "JOIN suppliers s ON ir.supplier_id = s.supplier_id " +
+            	    "WHERE p.quantity_in_stock > 0;";
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {

@@ -10,6 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
@@ -49,19 +50,31 @@ public class Employee_BatchController {
         batchList.clear();
         try {
             Connection conn = DBConnection.getConnection();
-            String sql = "SELECT b.batch_id, b.import_date, b.expiration_date, b.total_quantity, " +
-                         "(b.total_quantity - b.quantity_in_stock) AS sold_quantity, " +
-                         "p.product_name, s.supplier_name, b.value_batch " +
-                         "FROM batch b " +
-                         "JOIN products p ON b.product_id = p.product_id " +
-                         "JOIN suppliers s ON b.supplier_id = s.supplier_id";
+            String sql = 
+                "SELECT " +
+                "  b.batch_id, " +
+                "  b.import_date, " +
+                "  b.expiration_date, " +
+                "  b.total_quantity, " +
+                "  (b.total_quantity - b.quantity_in_stock) AS sold_quantity, " +
+                "  p.product_name, " +
+                "  s.supplier_name, " +
+                "  b.value_batch " +
+                "FROM batch b " +
+                "  JOIN products p ON b.product_id = p.product_id " +
+                "  JOIN import_reports ir ON b.import_id = ir.import_id " +
+                "  JOIN suppliers s ON ir.supplier_id = s.supplier_id";
+
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
                 int batchId = rs.getInt("batch_id");
                 LocalDate importDate = rs.getDate("import_date").toLocalDate();
-                LocalDate expDate = rs.getDate("expiration_date").toLocalDate();
+
+                Date expRaw = rs.getDate("expiration_date");
+                LocalDate expDate = (expRaw != null) ? expRaw.toLocalDate() : null;
+
                 int totalQty = rs.getInt("total_quantity");
                 int soldQty = rs.getInt("sold_quantity");
                 String productName = rs.getString("product_name");
