@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox spacing="10" alignment="CENTER" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.Admin_AddScheduleController">
+    <padding>
+        <Insets top="20" right="20" bottom="20" left="20"/>
+    </padding>
+
+    <Label text="Gán Lịch Làm Việc Cho Nhân Viên" style="-fx-font-size: 18; -fx-font-weight: bold;"/>
+
+    <!-- Phần gán lịch -->
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Chọn Tháng:" minWidth="100"/>
+        <ComboBox fx:id="monthComboBox" prefWidth="150"/>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Chọn Nhân Viên:" minWidth="100"/>
+        <ComboBox fx:id="employeeComboBox" prefWidth="200"/>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER_LEFT">
+        <Label text="Chọn Mẫu Lịch:" minWidth="100"/>
+        <ComboBox fx:id="scheduleTemplateComboBox" prefWidth="300"/>
+    </HBox>
+
+    <HBox spacing="10" alignment="CENTER">
+        <Button text="Gán Lịch" onAction="#handleAssignSchedule" prefWidth="150"/>
+        <Button text="Tải Lịch Đã Gán" onAction="#handleLoadAssignedSchedules" prefWidth="150"/>
+    </HBox>
+
+    <Separator prefWidth="600"/>
+
+    <!-- Bảng xem lịch đã gán -->
+    <Label text="Lịch Đã Gán Trong Tháng" style="-fx-font-size: 16; -fx-font-weight: bold;"/>
+
+    <TableView fx:id="assignedScheduleTable" prefHeight="300" prefWidth="600">
+        <columns>
+            <TableColumn fx:id="colEmployeeId" text="Mã NV" prefWidth="100"/>
+            <TableColumn fx:id="colEmployeeName" text="Tên Nhân Viên" prefWidth="200"/>
+            <TableColumn fx:id="colTemplate" text="Lịch Làm Việc" prefWidth="300"/>
+        </columns>
+    </TableView>
+
+</VBox>

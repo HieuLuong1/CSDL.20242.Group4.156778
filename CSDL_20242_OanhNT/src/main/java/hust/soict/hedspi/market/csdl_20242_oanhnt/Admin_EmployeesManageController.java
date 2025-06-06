@@ -7,6 +7,9 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.DatePicker;
@@ -14,17 +17,26 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.stage.Stage;
 
 public class Admin_EmployeesManageController {
-    @FXML private TableView<Employee> employeeTable;
-    @FXML private TableColumn<Employee, String> colId, colName, colGender, colDob, colEmail, colPhone, colAddress, colIdCard;
-    @FXML private TextField tfSearchField;
-    @FXML private TextField tfId, tfName, tfGender, tfDob, tfEmail, tfPhone, tfAddress, tfIdCard;
-    @FXML private Button btnAdd, btnMark;
-    @FXML private DatePicker dpWorkDate;
-    @FXML private ComboBox<String> cbStatus;
+    @FXML
+    private TableView<Employee> employeeTable;
+    @FXML
+    private TableColumn<Employee, String> colId, colName, colGender, colDob, colEmail, colPhone, colAddress, colIdCard;
+    @FXML
+    private TextField tfSearchField;
+    @FXML
+    private TextField tfId, tfName, tfGender, tfDob, tfEmail, tfPhone, tfAddress, tfIdCard;
+    @FXML
+    private Button btnAdd, btnMark;
+    @FXML
+    private DatePicker dpWorkDate;
+    @FXML
+    private ComboBox<String> cbStatus;
 
-    @FXML private Label lbPresent, lbLate, lbAbsent, lbSalary;
+    @FXML
+    private Label lbPresent, lbLate, lbAbsent, lbSalary;
 
     private final ObservableList<Employee> employeeList = FXCollections.observableArrayList();
     private final Map<String, WorkScheduleRecord> workMap = new HashMap<>();
@@ -118,7 +130,28 @@ public class Admin_EmployeesManageController {
     }
 
     private void clearFields() {
-        tfId.clear(); tfName.clear(); tfGender.clear(); tfDob.clear();
-        tfEmail.clear(); tfPhone.clear(); tfAddress.clear(); tfIdCard.clear();
+        tfId.clear();
+        tfName.clear();
+        tfGender.clear();
+        tfDob.clear();
+        tfEmail.clear();
+        tfPhone.clear();
+        tfAddress.clear();
+        tfIdCard.clear();
+    }
+
+    @FXML
+    public void handleSchedule() {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Admin_AddSchedule.fxml"));
+            Parent root = loader.load();
+
+            Stage stage = new Stage();
+            stage.setTitle("Xem lịch làm việc");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

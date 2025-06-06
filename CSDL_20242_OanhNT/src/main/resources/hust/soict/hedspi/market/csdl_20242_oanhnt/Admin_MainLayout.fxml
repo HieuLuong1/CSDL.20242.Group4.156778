@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ButtonBar?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
@@ -10,7 +13,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<BorderPane fx:id="adminMainLayout" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.Admin_MainController">
+<BorderPane fx:id="adminMainLayout" prefHeight="600.0" prefWidth="1000.0" xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.Admin_MainController">
 
     <!-- Thanh tiêu đề -->
     <top>
@@ -47,23 +50,22 @@
                 <Button fx:id="btnEmployees" maxWidth="160" onAction="#handleManageEmployees" text="Quản lý nhân viên" />
 
                 <Button fx:id="btnUpdateStock" maxWidth="160" onAction="#handleStorage" text="Quản lý kho" />
-                <Button maxWidth="160" text="Lương" />
+                <Button fx:id="btnSalaryManage" maxWidth="160" onAction="#handleSalaryManage" text="Lương" />
                 <Button fx:id="btnImport" maxWidth="160" onAction="#handleImport" text="Nhập hàng" />
-                <Button fx:id="btnIncident" maxWidth="160" onAction="#handleIncident" text="Biên bản" />
-            <Button fx:id="btnSupplier" mnemonicParsing="false" onAction="#handleSup" prefHeight="25.0" prefWidth="160.0" text="Nhà cung cấp" />
+
+                <Button fx:id="btnSupplier" mnemonicParsing="false" onAction="#handleSup" prefHeight="25.0" prefWidth="160.0" text="Nhà cung cấp" />
+                <Button fx:id="btnReport" mnemonicParsing="false" onAction="#handleReport" prefHeight="25.0" prefWidth="160.0" text="Biên bản xử lý" />
+                <Button fx:id="btnInventoryReport" mnemonicParsing="false" onAction="#handleInventoryReport" prefHeight="25.0" prefWidth="160.0" text="Biên bản kiểm kê" />
             </children>
             <padding>
                 <Insets bottom="20" left="20" right="20" top="20" />
             </padding>
         </VBox>
     </left>
-
-    <!-- Nội dung trung tâm -->
     <center>
-        <StackPane fx:id="contentArea" style="-fx-background-color: white;">
+        <StackPane fx:id="contentArea" style="-fx-background-color: white;" BorderPane.alignment="CENTER">
             <children>
                 <Label style="-fx-text-fill: #7f8c8d;" text="Chọn chức năng bên trái" />
-            <ButtonBar prefHeight="40.0" prefWidth="200.0" />
             </children>
         </StackPane>
     </center>

@@ -8,8 +8,6 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
-import java.io.IOException;
-
 public class Admin_MainController {
 
     @FXML
@@ -91,6 +89,36 @@ public class Admin_MainController {
     private void handleSup(){
         try{
             FXMLLoader loader = new FXMLLoader(getClass().getResource("Admin_Supplier.fxml"));
+            Parent root = loader.load();
+            contentArea.getChildren().setAll(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @FXML
+    private void handleReport(){
+        try{
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Admin_ReportManage.fxml"));
+            Parent root = loader.load();
+            contentArea.getChildren().setAll(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @FXML
+    private void handleSalaryManage(){
+        try{
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Admin_SalaryManage.fxml"));
+            Parent root = loader.load();
+            contentArea.getChildren().setAll(root);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    @FXML
+    private void handleInventoryReport(){
+        try{
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Admin_InventoryReport.fxml"));
             Parent root = loader.load();
             contentArea.getChildren().setAll(root);
         } catch (Exception e) {
