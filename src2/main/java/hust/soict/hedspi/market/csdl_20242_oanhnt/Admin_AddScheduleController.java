@@ -8,6 +8,7 @@ import javafx.scene.control.*;
 import javafx.event.ActionEvent;
 
 import java.sql.*;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 
 public class Admin_AddScheduleController {
@@ -23,10 +24,17 @@ public class Admin_AddScheduleController {
 
     @FXML
     public void initialize() {
+        // Chỉ cho chọn tháng từ 6 đến 12
         ObservableList<Integer> months = FXCollections.observableArrayList();
-        for (int i = 1; i <= 12; i++) months.add(i);
+        for (int i = 6; i <= 12; i++) months.add(i);
         monthComboBox.setItems(months);
-        monthComboBox.getSelectionModel().select(LocalDate.now().getMonthValue() - 1);
+
+        int currentMonth = LocalDate.now().getMonthValue();
+        if (currentMonth >= 6 && currentMonth <= 12) {
+            monthComboBox.getSelectionModel().select(Integer.valueOf(currentMonth));
+        } else {
+            monthComboBox.getSelectionModel().select(Integer.valueOf(6));
+        }
 
         loadEmployees();
         loadScheduleTemplates();
@@ -35,7 +43,6 @@ public class Admin_AddScheduleController {
         colEmployeeName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEmployeeName()));
         colTemplate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getTemplateName()));
 
-        // Khi thay đổi tháng hoặc nhân viên
         monthComboBox.setOnAction(a -> reload());
         employeeComboBox.setOnAction(a -> reload());
 
@@ -110,8 +117,7 @@ public class Admin_AddScheduleController {
         int y = LocalDate.now().getYear();
 
         String sel = "SELECT start_day, end_day FROM schedule WHERE schedule_id=?";
-        String ins = "INSERT INTO working(employee_id, schedule_id, work_date, status) " +
-                     "VALUES (?, ?, ?, 'D') ON CONFLICT DO NOTHING";
+        String ins = "INSERT INTO working(employee_id, schedule_id, work_date, status) VALUES (?, ?, ?, '') ON CONFLICT DO NOTHING";
 
         try (Connection c = DBConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(sel);
@@ -120,12 +126,22 @@ public class Admin_AddScheduleController {
             ps.setInt(1, sch);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    int sd = rs.getInt(1), ed = rs.getInt(2);
-                    LocalDate st = LocalDate.of(y, m, 1);
+                    int sd = rs.getInt(1); // start_day (T2...T8)
+                    int ed = rs.getInt(2); // end_day (T2...T8)
+
+                    // Bắt đầu ngày trong tháng từ ngày 2 (bỏ qua ngày 1 vì chưa rõ lịch)
+                    LocalDate st = LocalDate.of(y, m, 2);
                     LocalDate en = st.withDayOfMonth(st.lengthOfMonth());
+
+                    // Tìm ngày đầu tiên trong tháng có ngày T phù hợp với sd
+                    while (mapDayToT(st.getDayOfWeek().getValue()) < sd) {
+                        st = st.plusDays(1);
+                    }
+
+                    // Lặp từng ngày trong tháng từ st đến en, chèn lịch nếu ngày trong khoảng sd - ed
                     for (LocalDate d = st; !d.isAfter(en); d = d.plusDays(1)) {
-                        int dayOfWeek = d.getDayOfWeek().getValue(); // 1 = Monday, 7 = Sunday
-                        if (dayOfWeek >= sd && dayOfWeek <= ed) {
+                        int tDay = mapDayToT(d.getDayOfWeek().getValue());
+                        if (tDay >= sd && tDay <= ed) {
                             pi.setInt(1, emp);
                             pi.setInt(2, sch);
                             pi.setDate(3, Date.valueOf(d));
@@ -138,6 +154,13 @@ public class Admin_AddScheduleController {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+    }
+
+    private int mapDayToT(int javaDayOfWeek) {
+        // Java DayOfWeek: Monday=1 ... Sunday=7
+        // Ta map thành T2=2, ..., T7=7, T8=8 (Chủ nhật)
+        if (javaDayOfWeek == 7) return 8;  // Chủ nhật map thành T8
+        else return javaDayOfWeek + 1;    // Thứ hai = 2, thứ ba = 3, ..., thứ bảy = 7
     }
 
     private void reload() {

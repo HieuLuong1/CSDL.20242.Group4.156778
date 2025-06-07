@@ -29,7 +29,6 @@ public class Admin_EmployeesManageController {
 
     @FXML
     public void initialize() {
-        // Thiết lập các cột của bảng
         colId.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getId()));
         colName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getFullName()));
         colGender.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getGender()));
@@ -39,14 +38,11 @@ public class Admin_EmployeesManageController {
         colAddress.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getAddress()));
         colIdCard.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getIdCard()));
 
-        // Thiết lập ComboBox trạng thái điểm danh
         cbStatus.getItems().addAll("Có mặt", "Muộn", "Vắng");
         cbStatus.setValue("Có mặt");
 
-        // Load dữ liệu nhân viên
         loadEmployeesFromDB();
 
-        // Thiết lập các listener và sự kiện
         btnAdd.setOnAction(e -> addEmployee());
         btnMark.setOnAction(e -> markAttendance());
         btnAddSchedule.setOnAction(this::handleSchedule);

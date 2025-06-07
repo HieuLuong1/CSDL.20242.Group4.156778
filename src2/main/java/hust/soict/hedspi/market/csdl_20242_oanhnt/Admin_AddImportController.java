@@ -36,6 +36,7 @@ public class Admin_AddImportController {
     @FXML
     public void initialize() {
         btnAddBatch.setOnAction(event -> addBatchFields());
+        btnCreate.setOnAction(event -> handleCreateImport());
     }
 
     private void addBatchFields() {
@@ -65,10 +66,17 @@ public class Admin_AddImportController {
         LocalDate date = dateImportDate.getValue();
         String address = txtLocation.getText().trim();
         String supplierName = txtSupplier.getText().trim();
+        String creatorName = txtCreator.getText().trim();
+
         int supplierId = getSupplierIdByName(supplierName);
+        int employeeId = getEmployeeIdByName(creatorName);
 
         if (supplierId == -1) {
             System.out.println("Không tìm thấy nhà cung cấp.");
+            return;
+        }
+        if (employeeId == -1) {
+            System.out.println("Không tìm thấy nhân viên: " + creatorName);
             return;
         }
 
@@ -80,12 +88,13 @@ public class Admin_AddImportController {
 
             // 1. Insert into import_reports
             String sqlImport = "INSERT INTO import_reports (import_date, delivery_address, total_amount, employee_id, supplier_id) " +
-                               "VALUES (?, ?, ?, NULL, ?) RETURNING import_id";
+                               "VALUES (?, ?, ?, ?, ?) RETURNING import_id";
             PreparedStatement psImport = conn.prepareStatement(sqlImport);
             psImport.setDate(1, Date.valueOf(date));
             psImport.setString(2, address);
             psImport.setDouble(3, 0); // temporary
-            psImport.setInt(4, supplierId);
+            psImport.setInt(4, employeeId);  // ✅ fix đúng
+            psImport.setInt(5, supplierId);
 
             ResultSet rsImport = psImport.executeQuery();
             int importId = -1;
@@ -185,6 +194,18 @@ public class Admin_AddImportController {
             stmt.setString(1, name);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return rs.getInt("supplier_id");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return -1;
+    }
+
+    private int getEmployeeIdByName(String name) {
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement("SELECT employee_id FROM employee WHERE firstname = ?")) {
+            stmt.setString(1, name);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) return rs.getInt("employee_id");
         } catch (Exception e) {
             e.printStackTrace();
         }

@@ -2,11 +2,13 @@ package hust.soict.hedspi.market.csdl_20242_oanhnt;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 
 import java.sql.*;
 import java.time.LocalDate;
+import java.util.List;
 
 public class Employee_StoreAddController {
     @FXML private Button cancelBtn;
@@ -16,150 +18,107 @@ public class Employee_StoreAddController {
     @FXML private TextField quantityField;
     @FXML private TextField unitField;
     @FXML private Button saveProductBtn;
-    @FXML private TextField supField;
+    @FXML private ComboBox<String> supplierCombo;
+    @FXML private ComboBox<String> creatorCombo;
 
     private Employee_StoreManageController storeManageController;
+    private int employeeId;
 
     public void setStoreManageController(Employee_StoreManageController controller) {
         this.storeManageController = controller;
     }
 
+    public void setEmployeeId(int employeeId) {
+        this.employeeId = employeeId;
+    }
+
     @FXML
     private void initialize() {
+        loadSuppliers();
+        loadCreators();
         saveProductBtn.setOnAction(e -> saveProduct());
         cancelBtn.setOnAction(e -> closeWindow());
     }
 
+    private void loadSuppliers() {
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT supplier_id, supplier_name FROM suppliers")) {
+            while (rs.next()) {
+                supplierCombo.getItems().add(rs.getInt(1) + ":" + rs.getString(2));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    private void loadCreators() {
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT employee_id, firstname, lastname FROM employee")) {
+            while (rs.next()) {
+                creatorCombo.getItems().add(rs.getInt(1) + ":" + rs.getString(2) + " " + rs.getString(3));
+            }
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
     private void saveProduct() {
-        Connection conn = null;
-        PreparedStatement stmtProduct = null;
-        PreparedStatement stmtImport = null;
-        PreparedStatement stmtBatch = null;
-        ResultSet rsProductKeys = null;
-        ResultSet rsImportKeys = null;
+        String supSel = supplierCombo.getValue();
+        String[] supParts = supSel.split(":",2);
+        int supplierId = Integer.parseInt(supParts[0]);
 
-        try {
-            // 1. Đọc dữ liệu từ form
-            String name     = productNameField.getText().trim();
-            String unit     = unitField.getText().trim();
-            double price    = Double.parseDouble(priceField.getText().trim());
-            int quantity    = Integer.parseInt(quantityField.getText().trim());
-            String category = cateField.getText().trim();
-            String supplier = supField.getText().trim();
+        String creSel = creatorCombo.getValue();
+        int creatorId = Integer.parseInt(creSel.split(":",2)[0]);
 
-            // 2. Lấy category_id và supplier_id
-            int categoryId = getCategoryIdByName(category);
-            int supplierId = getSupplierIdByName(supplier);
+        try (Connection conn = DBConnection.getConnection()) {
+            conn.setAutoCommit(false);
+            String name = productNameField.getText().trim();
+            String unit = unitField.getText().trim();
+            double price = Double.parseDouble(priceField.getText().trim());
+            int qty = Integer.parseInt(quantityField.getText().trim());
+            int categoryId = getCategoryIdByName(cateField.getText().trim());
 
-            if (categoryId == -1 || supplierId == -1) {
-                System.out.println("Không tìm thấy category hoặc supplier.");
-                return;
-            }
+            // Insert product
+            PreparedStatement ps1 = conn.prepareStatement(
+                "INSERT INTO products(product_name, unit, price_with_tax, quantity_in_stock, category_id) VALUES(?,?,?,?,?)",
+                Statement.RETURN_GENERATED_KEYS);
+            ps1.setString(1,name); ps1.setString(2,unit);
+            ps1.setDouble(3,price); ps1.setInt(4,qty);
+            ps1.setInt(5,categoryId);
+            ps1.executeUpdate();
+            ResultSet rs1 = ps1.getGeneratedKeys(); rs1.next(); int pid = rs1.getInt(1);
 
-            conn = DBConnection.getConnection();
-            conn.setAutoCommit(false); // chạy trong một transaction
+            // Insert import_reports
+            PreparedStatement ps2 = conn.prepareStatement(
+                "INSERT INTO import_reports(import_date, delivery_address, total_amount, employee_id, supplier_id) VALUES(?,?,?,?,?)",
+                Statement.RETURN_GENERATED_KEYS);
+            ps2.setDate(1, Date.valueOf(LocalDate.now()));
+            ps2.setString(2, "");
+            ps2.setDouble(3, price * qty);
+            ps2.setInt(4, creatorId);
+            ps2.setInt(5, supplierId);
+            ps2.executeUpdate();
+            ResultSet rs2 = ps2.getGeneratedKeys(); rs2.next(); int impId = rs2.getInt(1);
 
-            // ──────── 3. Chèn vào products ────────
-            String sqlProduct =
-                "INSERT INTO products (product_name, unit, price_with_tax, quantity_in_stock, category_id) " +
-                "VALUES (?, ?, ?, ?, ?)";
-            stmtProduct = conn.prepareStatement(sqlProduct, Statement.RETURN_GENERATED_KEYS);
-            stmtProduct.setString(1, name);
-            stmtProduct.setString(2, unit);
-            stmtProduct.setDouble(3, price);
-            stmtProduct.setInt(4, quantity);
-            stmtProduct.setInt(5, categoryId);
-            stmtProduct.executeUpdate();
+            // Insert batch
+            PreparedStatement ps3 = conn.prepareStatement(
+                "INSERT INTO batch(import_date, expiration_date, total_quantity, quantity_in_stock, product_id, import_id, value_batch) VALUES(?,?,?,?,?,?,?)");
+            ps3.setDate(1, Date.valueOf(LocalDate.now())); ps3.setNull(2, Types.DATE);
+            ps3.setInt(3, qty); ps3.setInt(4, qty);
+            ps3.setInt(5, pid); ps3.setInt(6, impId); ps3.setDouble(7, price * qty);
+            ps3.executeUpdate();
 
-            // Lấy product_id vừa tạo
-            rsProductKeys = stmtProduct.getGeneratedKeys();
-            int productId;
-            if (rsProductKeys.next()) {
-                productId = rsProductKeys.getInt(1);
-            } else {
-                throw new SQLException("Không lấy được product_id vừa tạo.");
-            }
-
-            // ──────── 4. Chèn vào import_reports ────────
-            String sqlImport =
-                "INSERT INTO import_reports (import_date, delivery_address, total_amount, employee_id, supplier_id) " +
-                "VALUES (?, ?, ?, NULL, ?)";
-            stmtImport = conn.prepareStatement(sqlImport, Statement.RETURN_GENERATED_KEYS);
-            stmtImport.setDate(1, Date.valueOf(LocalDate.now()));
-            stmtImport.setString(2, "");
-            stmtImport.setDouble(3, price * quantity);
-            stmtImport.setInt(4, supplierId);
-            stmtImport.executeUpdate();
-
-            // Lấy import_id vừa tạo
-            rsImportKeys = stmtImport.getGeneratedKeys();
-            int importId;
-            if (rsImportKeys.next()) {
-                importId = rsImportKeys.getInt(1);
-            } else {
-                throw new SQLException("Không lấy được import_id vừa tạo.");
-            }
-
-            // ──────── 5. Chèn vào batch ────────
-            String sqlBatch =
-                "INSERT INTO batch (import_date, expiration_date, total_quantity, quantity_in_stock, product_id, import_id, value_batch) " +
-                "VALUES (?, ?, ?, ?, ?, ?, ?)";
-            stmtBatch = conn.prepareStatement(sqlBatch);
-            stmtBatch.setDate(1, Date.valueOf(LocalDate.now()));
-            stmtBatch.setDate(2, null);
-            stmtBatch.setInt(3, quantity);
-            stmtBatch.setInt(4, quantity);
-            stmtBatch.setInt(5, productId);
-            stmtBatch.setInt(6, importId);
-            stmtBatch.setDouble(7, price * quantity);
-            stmtBatch.executeUpdate();
-
-            // ──────── 6. Commit transaction ────────
             conn.commit();
-
-            // 7. Reload lại danh sách sản phẩm (có thể load thêm batch/phiếu nhập)
             storeManageController.loadProductDataFromDB();
             closeWindow();
         } catch (Exception e) {
             e.printStackTrace();
-            try {
-                if (conn != null) conn.rollback();
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-        } finally {
-            // Đóng tài nguyên
-            try { if (rsProductKeys != null) rsProductKeys.close(); } catch (Exception e) { }
-            try { if (rsImportKeys   != null) rsImportKeys.close(); } catch (Exception e) { }
-            try { if (stmtProduct    != null) stmtProduct.close(); } catch (Exception e) { }
-            try { if (stmtImport     != null) stmtImport.close(); } catch (Exception e) { }
-            try { if (stmtBatch      != null) stmtBatch.close(); } catch (Exception e) { }
-            try { if (conn           != null) conn.setAutoCommit(true); } catch (Exception e) { }
         }
     }
 
     private int getCategoryIdByName(String name) throws SQLException {
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(
-                 "SELECT category_id FROM categories WHERE category_name = ?"
-             )) {
-            stmt.setString(1, name);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getInt("category_id");
-            }
-        }
-        return -1;
-    }
-
-    private int getSupplierIdByName(String name) throws SQLException {
-        try (Connection conn = DBConnection.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(
-                 "SELECT supplier_id FROM suppliers WHERE supplier_name = ?"
-             )) {
-            stmt.setString(1, name);
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) return rs.getInt("supplier_id");
-            }
+        try (Connection c = DBConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement("SELECT category_id FROM categories WHERE category_name = ?")) {
+            ps.setString(1, name);
+            try (ResultSet rs = ps.executeQuery()) { if (rs.next()) return rs.getInt(1); }
         }
         return -1;
     }
