@@ -1,4 +1,8 @@
 package hust.soict.hedspi.market.csdl_20242_oanhnt;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.io.IOException;
 
 import javafx.event.ActionEvent;
@@ -12,51 +16,77 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
 public class User_MainController {
-    @FXML
-    private StackPane contentArea;
-    @FXML
-    private Label welcomeLabel;
+    @FXML private StackPane contentArea;
+    @FXML private Label welcomeLabel;
 
-    private Customer customer;
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-        welcomeLabel.setText("Xin chào, " + customer.getFullName());
+    public static int    customerID      = 1;
+    public static String currentUsername = "customer01";
+
+    @FXML
+    public void initialize() {
+        try {
+            switch (currentUsername) {
+                case "customer02" -> customerID = 2;
+                case "customer03" -> customerID = 3;
+                default            -> customerID = 1;
+            }
+            String query = "SELECT fullname FROM customer WHERE customer_id = ?";
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, customerID);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        welcomeLabel.setText("Xin chào, " + rs.getString("fullname"));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void handleViewPersonalInfo() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("User_Info.fxml"));
-            Parent root = loader.load();
+            String query = "SELECT fullname, phone, email FROM customer WHERE customer_id = ?";
+            String fullname = null, phone = null, email = null;
+            try (Connection conn = DBConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, customerID);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        fullname = rs.getString("fullname");
+                        phone    = rs.getString("phone");
+                        email    = rs.getString("email");
+                    }
+                }
+            }
 
-            User_InfoController infoController = loader.getController();
-            infoController.setUserInfo(customer.getFullName(), customer.getPhone(), customer.getEmail());
-            contentArea.getChildren().setAll(root);
-            //Stage stage = new Stage();
-            //stage.setTitle("Thông tin cá nhân");
-            //stage.setScene(new Scene(root));
-            //stage.show();
+            if (fullname != null) {
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("User_Info.fxml"));
+                Parent root = loader.load();
+                contentArea.getChildren().setAll(root);
+                User_InfoController infoController = loader.getController();
+                infoController.setUserInfo(fullname, phone, email);
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
+
     @FXML
     private void handleViewPurchaseHistory() {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("User_PurchaseHistory.fxml"));
             Parent root = loader.load();
-
             User_PurchaseHistoryController controller = loader.getController();
-            controller.loadInvoices();
+            controller.setCustomerId(customerID);
             contentArea.getChildren().setAll(root);
-            //Stage stage = new Stage();
-            //stage.setTitle("Lịch sử mua hàng");
-            //stage.setScene(new Scene(root));
-            //stage.show();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+
     @FXML
     private void handleLogout(ActionEvent event) {
         try {

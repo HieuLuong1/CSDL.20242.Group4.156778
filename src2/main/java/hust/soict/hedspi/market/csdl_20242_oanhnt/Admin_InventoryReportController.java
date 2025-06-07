@@ -1,11 +1,5 @@
 package hust.soict.hedspi.market.csdl_20242_oanhnt;
 
-import java.io.IOException;
-import java.sql.*;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,10 +7,14 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.stage.Stage;
+
+import java.io.IOException;
+import java.sql.*;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Admin_InventoryReportController {
 
@@ -32,10 +30,27 @@ public class Admin_InventoryReportController {
 
     @FXML
     public void initialize() {
+        setupReportTable();
+        setupBatchDetailTable();
+        loadInventoryReportsFromDB();
+
+        // Update batch details when a report is selected
+        inventoryReportTable.getSelectionModel().selectedItemProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                batchDetailTable.setItems(FXCollections.observableArrayList(newVal.getBatches()));
+            } else {
+                batchDetailTable.getItems().clear();
+            }
+        });
+    }
+
+    private void setupReportTable() {
         colReportId.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getReportId()));
         colReportDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDate().toString()));
         inventoryReportTable.setItems(reportList);
+    }
 
+    private void setupBatchDetailTable() {
         colBatchId.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getBatchId())));
         colProductName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProductName()));
         colImportDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getImportDate().toString()));
@@ -47,24 +62,18 @@ public class Admin_InventoryReportController {
                 selected != null ? String.valueOf(selected.getActualQuantityOfBatch(data.getValue())) : ""
             );
         });
-
-        loadInventoryReportsFromDB();
-
-        inventoryReportTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            if (newSel != null) {
-                batchDetailTable.setItems(FXCollections.observableArrayList(newSel.getBatches()));
-            }
-        });
     }
 
     private void loadInventoryReportsFromDB() {
         String reportQuery = "SELECT * FROM check_reports";
-        String detailQuery = "SELECT cd.batch_id, cd.real_quantity, b.import_date, b.expiration_date, " +
-                             "b.total_quantity, p.product_name " +
-                             "FROM check_details cd " +
-                             "JOIN batch b ON cd.batch_id = b.batch_id " +
-                             "JOIN products p ON b.product_id = p.product_id " +
-                             "WHERE cd.report_id = ?";
+        String detailQuery = """
+                SELECT cd.batch_id, cd.real_quantity, b.import_date, b.expiration_date, 
+                       b.total_quantity, p.product_name
+                FROM check_details cd
+                JOIN batch b ON cd.batch_id = b.batch_id
+                JOIN products p ON b.product_id = p.product_id
+                WHERE cd.report_id = ?
+                """;
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement psReport = conn.prepareStatement(reportQuery);
@@ -86,10 +95,10 @@ public class Admin_InventoryReportController {
                         int realQty = rsDetail.getInt("real_quantity");
                         LocalDate importDate = rsDetail.getDate("import_date").toLocalDate();
                         LocalDate expiryDate = rsDetail.getDate("expiration_date").toLocalDate();
-                        int systemQty = rsDetail.getInt("total_quantity");
+                        int totalQty = rsDetail.getInt("total_quantity");
                         String productName = rsDetail.getString("product_name");
 
-                        Batch batch = new Batch(batchId, importDate, expiryDate, systemQty, 0, productName, "", 0);
+                        Batch batch = new Batch(batchId, importDate, expiryDate, totalQty, 0, productName, "", 0);
                         batches.add(batch);
                         actualQuantities.add(realQty);
                     }
@@ -110,7 +119,7 @@ public class Admin_InventoryReportController {
             Parent root = loader.load();
 
             Admin_CreateInventoryReportController controller = loader.getController();
-            controller.setReportList(reportList);
+            controller.setReportList(reportList); // cho phép cập nhật lại table sau khi tạo biên bản
 
             Stage stage = new Stage();
             stage.setTitle("Tạo Biên Bản Kiểm Kê");

@@ -1,107 +1,76 @@
 package hust.soict.hedspi.market.csdl_20242_oanhnt;
 
-import javafx.beans.property.*;
-
 public class Salary {
-    private final StringProperty employeeId      = new SimpleStringProperty();
-    private final StringProperty salaryIdStr     = new SimpleStringProperty();
-    private final IntegerProperty salaryId       = new SimpleIntegerProperty();
-    private final IntegerProperty year           = new SimpleIntegerProperty();
-    private final IntegerProperty month          = new SimpleIntegerProperty();
-    private final IntegerProperty basicSalary    = new SimpleIntegerProperty();
-    private final IntegerProperty workdays       = new SimpleIntegerProperty();
-    private final IntegerProperty bonus          = new SimpleIntegerProperty();
-    private final IntegerProperty rewardPunish   = new SimpleIntegerProperty();
-    private final IntegerProperty leavePay       = new SimpleIntegerProperty();
-    private final IntegerProperty actualSalary   = new SimpleIntegerProperty();
-    private final StringProperty note            = new SimpleStringProperty();
+    private String employeeId;    // có thể là mã hoặc số, giữ String
+    private String salaryIdStr;   // ví dụ "SAL001"
+    private int salaryId;         // id trong DB (int)
+    private int year;
+    private int month;
+    private int basicSalary;
+    private int workdays;
+    private int bonus;            // allowance
+    private int rewardPunish;     // adjustment
+    private int leavePay;
+    private int actualSalary;
+    private String note;
 
-    public Salary(String employeeId, String salaryIdStr, int salaryId,
-                  int year, int month,
-                  int basicSalary, int workdays, int bonus,
-                  int rewardPunish, int leavePay, String note) {
-        this.employeeId.set(employeeId);
-        this.salaryIdStr.set(salaryIdStr);
-        this.salaryId.set(salaryId);
-        this.year.set(year);
-        this.month.set(month);
-        this.basicSalary.set(basicSalary);
-        this.workdays.set(workdays);
-        this.bonus.set(bonus);
-        this.rewardPunish.set(rewardPunish);
-        this.leavePay.set(leavePay);
-        this.note.set(note);
+    public Salary(String employeeId, String salaryIdStr, int salaryId, int year, int month,
+                  int basicSalary, int workdays, int bonus, int rewardPunish,
+                  int leavePay, String note) {
+        this.employeeId = employeeId;
+        this.salaryIdStr = salaryIdStr;
+        this.salaryId = salaryId;
+        this.year = year;
+        this.month = month;
+        this.basicSalary = basicSalary;
+        this.workdays = workdays;
+        this.bonus = bonus;
+        this.rewardPunish = rewardPunish;
+        this.leavePay = leavePay;
+        this.note = note;
         updateActualSalary();
     }
 
     public void updateActualSalary() {
-        // Công thức ví dụ: actual = basicSalary * workdays + bonus + rewardPunish + leavePay
-        int result = basicSalary.get() * workdays.get()
-                   + bonus.get()
-                   + rewardPunish.get()
-                   + leavePay.get();
-        this.actualSalary.set(result);
+        // Tính lương thực nhận: công thức ví dụ
+        this.actualSalary = (int)(basicSalary * workdays / 26.0 + bonus + rewardPunish - leavePay);
+        if (this.actualSalary < 0) this.actualSalary = 0;
     }
 
-    // --- Các setter / getter hiện có ---
-    public void setBasicSalary(int value) {
-        basicSalary.set(value);
-        updateActualSalary();
-    }
-    public void setWorkdays(int value) {
-        workdays.set(value);
-        updateActualSalary();
-    }
-    public void setBonus(int value) {
-        bonus.set(value);
-        updateActualSalary();
-    }
-    public void setRewardPunish(int value) {
-        rewardPunish.set(value);
-        updateActualSalary();
-    }
-    public void setLeavePay(int value) {
-        leavePay.set(value);
-        updateActualSalary();
-    }
+    // --- Getter và Setter ---
+    public String getEmployeeId() { return employeeId; }
+    public void setEmployeeId(String employeeId) { this.employeeId = employeeId; }
 
-    public void setEmployeeId(String value)  { employeeId.set(value); }
-    public void setSalaryIdStr(String value) { salaryIdStr.set(value); }
-    public void setSalaryId(int value)       { salaryId.set(value); }
-    public void setNote(String value)        { note.set(value); }
-    public void setYear(int value)           { year.set(value); }
-    public void setMonth(int value)          { month.set(value); }
+    public String getSalaryIdStr() { return salaryIdStr; }
+    public void setSalaryIdStr(String salaryIdStr) { this.salaryIdStr = salaryIdStr; }
 
-    // --- Thêm phương thức này để controller có thể gọi ---
-    public void setActualSalary(int value) {
-        actualSalary.set(value);
-    }
+    public int getSalaryId() { return salaryId; }
+    public void setSalaryId(int salaryId) { this.salaryId = salaryId; }
 
-    // --- Getter ---
-    public String getEmployeeId()   { return employeeId.get(); }
-    public String getSalaryIdStr()  { return salaryIdStr.get(); }
-    public int    getSalaryId()     { return salaryId.get(); }
-    public int    getYear()         { return year.get(); }
-    public int    getMonth()        { return month.get(); }
-    public int    getBasicSalary()  { return basicSalary.get(); }
-    public int    getWorkdays()     { return workdays.get(); }
-    public int    getBonus()        { return bonus.get(); }
-    public int    getRewardPunish() { return rewardPunish.get(); }
-    public int    getLeavePay()     { return leavePay.get(); }
-    public int    getActualSalary() { return actualSalary.get(); }
-    public String getNote()         { return note.get(); }
+    public int getYear() { return year; }
+    public void setYear(int year) { this.year = year; }
 
-    // --- Property getters để binding (nếu cần) ---
-    public StringProperty employeeIdProperty()    { return employeeId; }
-    public StringProperty salaryIdStrProperty()   { return salaryIdStr; }
-    public IntegerProperty salaryIdProperty()     { return salaryId; }
-    public IntegerProperty yearProperty()         { return year; }
-    public IntegerProperty monthProperty()        { return month; }
-    public IntegerProperty basicSalaryProperty()  { return basicSalary; }
-    public IntegerProperty workdaysProperty()     { return workdays; }
-    public IntegerProperty bonusProperty()        { return bonus; }
-    public IntegerProperty rewardPunishProperty() { return rewardPunish; }
-    public IntegerProperty leavePayProperty()     { return leavePay; }
-    public IntegerProperty actualSalaryProperty() { return actualSalary; }
-    public StringProperty noteProperty()          { return note; }
+    public int getMonth() { return month; }
+    public void setMonth(int month) { this.month = month; }
+
+    public int getBasicSalary() { return basicSalary; }
+    public void setBasicSalary(int basicSalary) { this.basicSalary = basicSalary; }
+
+    public int getWorkdays() { return workdays; }
+    public void setWorkdays(int workdays) { this.workdays = workdays; }
+
+    public int getBonus() { return bonus; }
+    public void setBonus(int bonus) { this.bonus = bonus; }
+
+    public int getRewardPunish() { return rewardPunish; }
+    public void setRewardPunish(int rewardPunish) { this.rewardPunish = rewardPunish; }
+
+    public int getLeavePay() { return leavePay; }
+    public void setLeavePay(int leavePay) { this.leavePay = leavePay; }
+
+    public int getActualSalary() { return actualSalary; }
+    public void setActualSalary(int actualSalary) { this.actualSalary = actualSalary; }
+
+    public String getNote() { return note; }
+    public void setNote(String note) { this.note = note; }
 }

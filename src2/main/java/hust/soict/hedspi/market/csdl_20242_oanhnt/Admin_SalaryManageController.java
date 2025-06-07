@@ -16,13 +16,6 @@ import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.converter.IntegerStringConverter;
 
-/**
- * Controller cho màn hình Quản lý Lương (Salary).
- * - Load dữ liệu trực tiếp từ bảng `salary`.
- * - Filter theo Tháng/Năm.
- * - Thêm bản ghi mới vào DB khi bấm Add New.
- * - Chỉnh sửa trực tiếp; mỗi lần commit sẽ UPDATE ngược về DB.
- */
 public class Admin_SalaryManageController {
     @FXML private ComboBox<Integer> cbMonth;
     @FXML private ComboBox<Integer> cbYear;
@@ -34,9 +27,9 @@ public class Admin_SalaryManageController {
     @FXML private TableColumn<Salary, String>  colEmployeeId;
     @FXML private TableColumn<Salary, Integer> colBasic;
     @FXML private TableColumn<Salary, Integer> colWorkdays;
-    @FXML private TableColumn<Salary, Integer> colBonus;    // tương ứng với allowance
-    @FXML private TableColumn<Salary, Integer> colReward;   // tương ứng với adjustment
-    @FXML private TableColumn<Salary, Integer> colLeave;    // tương ứng với leave_pay
+    @FXML private TableColumn<Salary, Integer> colBonus;    // allowance
+    @FXML private TableColumn<Salary, Integer> colReward;   // adjustment
+    @FXML private TableColumn<Salary, Integer> colLeave;    // leave_pay
     @FXML private TableColumn<Salary, Integer> colActual;
     @FXML private TableColumn<Salary, String>  colNote;
 
@@ -44,13 +37,12 @@ public class Admin_SalaryManageController {
 
     @FXML
     public void initialize() {
-        // 1. Thiết lập ComboBox Tháng/Năm
         cbMonth.setItems(FXCollections.observableArrayList(getMonths()));
         cbYear.setItems(FXCollections.observableArrayList(getYears()));
+
         cbMonth.setValue(LocalDate.now().getMonthValue());
         cbYear.setValue(LocalDate.now().getYear());
 
-        // 2. Thiết lập CellValueFactory cho từng cột
         colId.setCellValueFactory(new PropertyValueFactory<>("salaryId"));
         colEmployeeId.setCellValueFactory(new PropertyValueFactory<>("employeeId"));
         colBasic.setCellValueFactory(new PropertyValueFactory<>("basicSalary"));
@@ -65,11 +57,13 @@ public class Admin_SalaryManageController {
         salaryTable.setEditable(true);
         enableEditing();
 
-        // 3. Load dữ liệu từ DB
-        loadSalariesFromDB();
+        // Khi mở màn hình thì tự động load luôn dữ liệu theo tháng/năm hiện tại
+        filterSalaries();
 
-        // 4. Gán hành động cho Filter và Add New
+        // Gán sự kiện cho nút Filter
         btnFilter.setOnAction(e -> filterSalaries());
+
+        // Gán sự kiện cho nút Add New
         btnAddNew.setOnAction(e -> addEmptyRowToDB());
     }
 
@@ -86,71 +80,7 @@ public class Admin_SalaryManageController {
         return years;
     }
 
-    /**
-     * Load tất cả bản ghi từ bảng `salary` và đổ vào salaryList.
-     * Tách cột monthyear ("MM/YYYY") thành month và year.
-     */
-    private void loadSalariesFromDB() {
-        salaryList.clear();
-        String sql = ""
-            + "SELECT salary_id, monthyear, basic_salary, workdays, allowance, adjustment, leave_pay, actual_salary, note, employee_id "
-            + "FROM salary ORDER BY salary_id";
-
-        try (Connection conn = DBConnection.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                int salaryId      = rs.getInt("salary_id");
-                String monthYear  = rs.getString("monthyear");   // ví dụ "6/2025"
-                double basicD     = rs.getDouble("basic_salary");
-                int    workdays   = rs.getInt("workdays");
-                double bonusD     = rs.getDouble("allowance");
-                double rewardD    = rs.getDouble("adjustment");
-                double leaveD     = rs.getDouble("leave_pay");
-                double actualD    = rs.getDouble("actual_salary");
-                String note       = rs.getString("note");
-                int    empIdInt   = rs.getInt("employee_id");
-
-                // Tách monthYear thành month và year
-                String[] parts = monthYear.split("/");
-                int month = Integer.parseInt(parts[0]);
-                int year  = Integer.parseInt(parts[1]);
-
-                int basicSalary  = (int) basicD;
-                int bonus        = (int) bonusD;
-                int rewardPunish = (int) rewardD;
-                int leavePay     = (int) leaveD;
-                int actualSalary = (int) actualD;
-                String employeeId = (empIdInt == 0 ? "" : String.valueOf(empIdInt));
-                String salaryIdStr = "SAL" + String.format("%03d", salaryId);
-
-                Salary s = new Salary(
-                    employeeId,
-                    salaryIdStr,
-                    salaryId,
-                    year,
-                    month,
-                    basicSalary,
-                    workdays,
-                    bonus,
-                    rewardPunish,
-                    leavePay,
-                    note == null ? "" : note
-                );
-                s.setActualSalary(actualSalary);
-                salaryList.add(s);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Cho phép chỉnh sửa trực tiếp; mỗi khi commit, cập nhật ngược về DB.
-     */
     private void enableEditing() {
-        // 1. Employee ID (String)
         colEmployeeId.setCellFactory(TextFieldTableCell.forTableColumn());
         colEmployeeId.setOnEditCommit(event -> {
             Salary s = event.getRowValue();
@@ -169,7 +99,6 @@ public class Admin_SalaryManageController {
             salaryTable.refresh();
         });
 
-        // 2. Basic Salary
         colBasic.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         colBasic.setOnEditCommit(event -> {
             Salary s = event.getRowValue();
@@ -181,7 +110,6 @@ public class Admin_SalaryManageController {
             salaryTable.refresh();
         });
 
-        // 3. Workdays
         colWorkdays.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         colWorkdays.setOnEditCommit(event -> {
             Salary s = event.getRowValue();
@@ -193,7 +121,6 @@ public class Admin_SalaryManageController {
             salaryTable.refresh();
         });
 
-        // 4. Bonus (Allowance)
         colBonus.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         colBonus.setOnEditCommit(event -> {
             Salary s = event.getRowValue();
@@ -205,7 +132,6 @@ public class Admin_SalaryManageController {
             salaryTable.refresh();
         });
 
-        // 5. Reward/Punish (Adjustment)
         colReward.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         colReward.setOnEditCommit(event -> {
             Salary s = event.getRowValue();
@@ -217,7 +143,6 @@ public class Admin_SalaryManageController {
             salaryTable.refresh();
         });
 
-        // 6. Leave Pay
         colLeave.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         colLeave.setOnEditCommit(event -> {
             Salary s = event.getRowValue();
@@ -229,7 +154,6 @@ public class Admin_SalaryManageController {
             salaryTable.refresh();
         });
 
-        // 7. Actual Salary (nếu cho phép edit)
         colActual.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
         colActual.setOnEditCommit(event -> {
             Salary s = event.getRowValue();
@@ -239,7 +163,6 @@ public class Admin_SalaryManageController {
             salaryTable.refresh();
         });
 
-        // 8. Note
         colNote.setCellFactory(TextFieldTableCell.forTableColumn());
         colNote.setOnEditCommit(event -> {
             Salary s = event.getRowValue();
@@ -251,77 +174,82 @@ public class Admin_SalaryManageController {
     }
 
     /**
-     * Filter theo Tháng/Năm: query lại DB chỉ lấy các bản ghi matching monthyear.
+     * Filter theo Tháng/Năm, load dữ liệu mới từ DB và set lại vào TableView.
      */
     private void filterSalaries() {
         int month = cbMonth.getValue();
-        int year  = cbYear.getValue();
+        int year = cbYear.getValue();
         String monthYear = month + "/" + year;
+        System.out.println("Filtering for month/year: " + monthYear);
 
-        String sql = ""
-            + "SELECT salary_id, monthyear, basic_salary, workdays, allowance, adjustment, leave_pay, actual_salary, note, employee_id "
-            + "FROM salary WHERE monthyear = ? ORDER BY salary_id";
+        String sql = "SELECT salary_id, monthyear, basic_salary, workdays, allowance, adjustment, leave_pay, actual_salary, note, employee_id "
+                + "FROM salary WHERE monthyear = ? ORDER BY salary_id";
 
         ObservableList<Salary> filtered = FXCollections.observableArrayList();
+
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
             ps.setString(1, monthYear);
             ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                int   salaryId    = rs.getInt("salary_id");
-                double basicD     = rs.getDouble("basic_salary");
-                int    workdays   = rs.getInt("workdays");
-                double bonusD     = rs.getDouble("allowance");
-                double rewardD    = rs.getDouble("adjustment");
-                double leaveD     = rs.getDouble("leave_pay");
-                double actualD    = rs.getDouble("actual_salary");
-                String note       = rs.getString("note");
-                int    empIdInt   = rs.getInt("employee_id");
 
-                int basicSalary    = (int) basicD;
-                int bonus          = (int) bonusD;
-                int rewardPunish   = (int) rewardD;
-                int leavePay       = (int) leaveD;
-                int actualSalary   = (int) actualD;
-                String employeeId  = (empIdInt == 0 ? "" : String.valueOf(empIdInt));
+            while (rs.next()) {
+                int salaryId = rs.getInt("salary_id");
+                double basicD = rs.getDouble("basic_salary");
+                int workdays = rs.getInt("workdays");
+                double bonusD = rs.getDouble("allowance");
+                double rewardD = rs.getDouble("adjustment");
+                double leaveD = rs.getDouble("leave_pay");
+                double actualD = rs.getDouble("actual_salary");
+                String note = rs.getString("note");
+                int empIdInt = rs.getInt("employee_id");
+
+                System.out.println("Found salary id: " + salaryId);
+
+                int basicSalary = (int) basicD;
+                int bonus = (int) bonusD;
+                int rewardPunish = (int) rewardD;
+                int leavePay = (int) leaveD;
+                int actualSalary = (int) actualD;
+                String employeeId = (empIdInt == 0 ? "" : String.valueOf(empIdInt));
                 String salaryIdStr = "SAL" + String.format("%03d", salaryId);
 
                 Salary s = new Salary(
-                    employeeId,
-                    salaryIdStr,
-                    salaryId,
-                    year,
-                    month,
-                    basicSalary,
-                    workdays,
-                    bonus,
-                    rewardPunish,
-                    leavePay,
-                    note == null ? "" : note
+                        employeeId,
+                        salaryIdStr,
+                        salaryId,
+                        year,
+                        month,
+                        basicSalary,
+                        workdays,
+                        bonus,
+                        rewardPunish,
+                        leavePay,
+                        note == null ? "" : note
                 );
                 s.setActualSalary(actualSalary);
                 filtered.add(s);
             }
             rs.close();
+
             salaryTable.setItems(filtered);
+            System.out.println("Loaded " + filtered.size() + " rows into TableView");
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
     }
 
     /**
-     * Thêm một bản ghi Salary mới với giá trị mặc định vào DB, rồi thêm vào salaryList.
-     * monthyear = cbMonth/cbYear; các numeric = 0; employee_id = NULL; note = "".
+     * Thêm một dòng Salary mặc định (rỗng) vào DB và thêm vào danh sách TableView.
      */
     private void addEmptyRowToDB() {
         int month = cbMonth.getValue();
-        int year  = cbYear.getValue();
+        int year = cbYear.getValue();
         String monthYear = month + "/" + year;
 
-        String insertSql = ""
-            + "INSERT INTO salary(monthyear, basic_salary, workdays, allowance, note, adjustment, leave_pay, actual_salary, employee_id) "
-            + "VALUES (?, 0, 0, 0, '', 0, 0, 0, NULL) RETURNING salary_id";
+        String insertSql = "INSERT INTO salary(monthyear, basic_salary, workdays, allowance, note, adjustment, leave_pay, actual_salary, employee_id) "
+                + "VALUES (?, 0, 0, 0, '', 0, 0, 0, NULL) RETURNING salary_id";
 
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(insertSql)) {
@@ -333,17 +261,17 @@ public class Admin_SalaryManageController {
                 String salaryIdStr = "SAL" + String.format("%03d", newId);
 
                 Salary s = new Salary(
-                    "",                 // employeeId rỗng
-                    salaryIdStr,
-                    newId,
-                    year,
-                    month,
-                    0,                  // basicSalary
-                    0,                  // workdays
-                    0,                  // bonus
-                    0,                  // rewardPunish
-                    0,                  // leavePay
-                    ""                  // note
+                        "",                 // employeeId rỗng
+                        salaryIdStr,
+                        newId,
+                        year,
+                        month,
+                        0,
+                        0,
+                        0,
+                        0,
+                        0,
+                        ""
                 );
                 s.setActualSalary(0);
                 salaryList.add(s);
@@ -356,22 +284,28 @@ public class Admin_SalaryManageController {
     }
 
     /**
-     * Cập nhật một cột duy nhất trong bảng salary cho salary_id = id.
+     * Cập nhật 1 cột trong bảng salary theo salaryId.
+     * @param salaryId id trong DB
+     * @param columnName tên cột trong DB
+     * @param value giá trị mới (có thể Integer hoặc String)
      */
-    private void updateOneColumnInDB(int id, String column, Object newValue) {
-        String sql = "UPDATE salary SET " + column + " = ? WHERE salary_id = ?";
+    private void updateOneColumnInDB(int salaryId, String columnName, Object value) {
+        String sql = "UPDATE salary SET " + columnName + " = ? WHERE salary_id = ?";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            if (newValue == null) {
-                ps.setNull(1, Types.INTEGER);
-            } else if (newValue instanceof Integer) {
-                ps.setInt(1, (Integer) newValue);
+            if (value == null) {
+                ps.setNull(1, Types.NULL);
+            } else if (value instanceof Integer) {
+                ps.setInt(1, (Integer) value);
+            } else if (value instanceof String) {
+                ps.setString(1, (String) value);
             } else {
-                ps.setString(1, newValue.toString());
+                ps.setObject(1, value);
             }
-            ps.setInt(2, id);
+            ps.setInt(2, salaryId);
             ps.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
