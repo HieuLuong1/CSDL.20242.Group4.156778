@@ -39,7 +39,10 @@ public class LoginController {
 
         accountPassword.put("employee01", "abc123");
         accountRole.put("employee01", "employee");
-        employeeAccounts.put("employee01", new Employee("NV001", "Trần Thị B", "12/03/1998", "Nữ", "tranb@gmail.com", "0987654321", "Hà Nội", "123456789012"));
+        accountPassword.put("employee02", "abc123");
+        accountRole.put("employee02", "employee");
+        accountPassword.put("employee03", "abc123");
+        accountRole.put("employee03", "employee");
 
         accountPassword.put("admin01", "admin123");
         accountRole.put("admin01", "admin");
@@ -77,11 +80,12 @@ public class LoginController {
                 stage.setTitle("Trang người dùng");
             }
             else if (role.equals("employee")) {
+            	Employee_MainController.employeeUsername = username;
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_MainLayout.fxml"));
                 Parent root = loader.load();
 
                 Employee_MainController controller = loader.getController();
-                controller.setEmployee(employeeAccounts.get(username));
+           //     controller.setEmployee(employeeAccounts.get(username));
 
                 Stage stage = (Stage) usernameField.getScene().getWindow();
                 stage.setScene(new Scene(root));

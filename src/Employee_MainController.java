@@ -1,3 +1,7 @@
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -12,29 +16,63 @@ public class Employee_MainController {
     @FXML
     private Label welcomeLabel;
 
-    private Employee employee;
-
-    public void setEmployee(Employee employee) {
-        this.employee = employee;
-        welcomeLabel.setText("Xin chào, " + employee.getFullName());
-    }
+    public static int employeeID = 1;
+	public static String employeeUsername = "employee01";
 
     @FXML
+	public void initialize() {
+		try {
+			switch (employeeUsername) {
+			case "employee01" -> employeeID = 1;
+			case "employee02" -> employeeID = 2;
+			case "employee03" -> employeeID = 3;
+			default -> employeeID = 1;
+			}
+			String query = "SELECT lastname, firstname FROM employee WHERE employee_id = ?";
+			try (Connection conn = DatabaseConnection.getConnection();
+					PreparedStatement ps = conn.prepareStatement(query)) {
+				ps.setInt(1, employeeID);
+				ResultSet rs = ps.executeQuery();
+				if (rs.next()) {
+					welcomeLabel.setText("Xin chào, " + rs.getString("lastname") + " " + rs.getString("firstname"));
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+    @FXML
     private void handleViewPersonalInfo() {
-        try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_Info.fxml"));
-            Parent root = loader.load();
+    	try {
+			String query = "SELECT * FROM employee WHERE employee_id = ?";
+			try (Connection conn = DatabaseConnection.getConnection();
+					PreparedStatement ps = conn.prepareStatement(query)) {
+				ps.setInt(1, employeeID);
+				ResultSet rs = ps.executeQuery();
+				FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_Info.fxml"));
+				Parent root = loader.load();
+				contentArea.getChildren().setAll(root);
+				Employee_InfoController infoController = loader.getController();
+				if (rs.next()) {
+				    infoController.setEmployeeInfo(
+				        rs.getString("lastname"),
+				        rs.getString("firstname"),
+				        rs.getInt("employee_id"),
+				        rs.getDate("dob").toString(),
+				        rs.getString("gender"),
+				        rs.getString("email"),
+				        rs.getString("phone"),
+				        rs.getString("address"),
+				        rs.getString("identity_id")
+				    );
+				}
 
-            Employee_InfoController controller = loader.getController();
-            controller.setEmployeeInfo(employee);
-            contentArea.getChildren().setAll(root);
-            //Stage stage = new Stage();
-            //stage.setTitle("Thông tin nhân viên");
-            //stage.setScene(new Scene(root));
-            //stage.show();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
     }
 
     @FXML

@@ -63,7 +63,7 @@
                 <HBox spacing="10">
                     <children>
                         <Label minWidth="120" text="Mã CCCD:" />
-                        <Label fx:id="idCardLabel" text="012345678901" />
+                        <Label fx:id="identityLabel" text="012345678901" />
                     </children>
                 </HBox>
             </children>
