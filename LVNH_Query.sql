@@ -53,7 +53,7 @@ SELECT cr.report_id, cr.check_date, b.batch_id, b.product_id, b.quantity_in_stoc
 FROM check_reports cr
 JOIN check_details cd ON cr.report_id = cd.report_id
 JOIN batch b ON cd.batch_id = b.batch_id
-WHERE cr.check_date >= '2025-06-01'
+WHERE cr.check_date >= '2025-01-01'
 ORDER BY cr.check_date, cr.report_id, b.batch_id;
 
 -- Hệ thống quét toàn bộ bảng check_reports để lọc ra các bản ghi có ngày đúng điều kiện, sau đó JOIN với 2 bảng check_details, batch dựa trên id tương ứng và đưa ra thông tin
