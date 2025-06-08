@@ -152,6 +152,18 @@ public class Employee_StoreManageController {
 
     public void handleBatch() {
         // Giữ nguyên logic mở form batch
+    	try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                "/hust/soict/hedspi/market/csdl_20242_oanhnt/Employee_Batch.fxml"));
+            Parent root = loader.load();
+            Stage stage = new Stage();
+            stage.setTitle("Hàng vừa nhập");
+            stage.setScene(new Scene(root));
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    	
     }
 
     public void resetItemIdCounter() {
