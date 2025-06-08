@@ -92,7 +92,7 @@ CREATE INDEX idx_import_date ON import_reports(import_date);
 CREATE OR REPLACE VIEW customer_spending_view AS
 SELECT c.customer_id, c.fullname, COUNT(o.order_id) AS so_don_hang, SUM(o.total_amount) AS tong_chi_tieu
 FROM customer c
-JOIN orders o ON c.customer_id = o.customer_id
+LEFT JOIN orders o ON c.customer_id = o.customer_id
 GROUP BY c.customer_id, c.fullname;
 
 -- 9. Hàm thống kê số ngày đi làm đúng giờ, đi muộn và vắng của nhân viên theo ID trong tháng 5 năm 2025
