@@ -4,29 +4,31 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
 import javafx.scene.control.*;
 
+import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
+import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-public class Employee_ScheduleController {
+public class Employee_ScheduleController implements Initializable {
 
     @FXML private Label titleLabel;
     @FXML private Label presentLabel;
     @FXML private Label lateLabel;
     @FXML private Label absentLabel;
-    @FXML private Label totalSalaryLabel;
-
+    @FXML private Label leaveLabel;
+    @FXML private Label lbTimeWork;
     @FXML private TableView<WorkScheduleRecord> scheduleTable;
     @FXML private TableColumn<WorkScheduleRecord, String> colDate;
-    @FXML private TableColumn<WorkScheduleRecord, String> colShift;
     @FXML private TableColumn<WorkScheduleRecord, String> colStartTime;
     @FXML private TableColumn<WorkScheduleRecord, String> colEndTime;
     @FXML private TableColumn<WorkScheduleRecord, String> colStatus;
-    @FXML private TableColumn<WorkScheduleRecord, String> colNote;
-    @FXML private TableColumn<WorkScheduleRecord, String> colSalary;
 
     @FXML private ComboBox<String> monthCombo;
     @FXML private ComboBox<String> yearCombo;
@@ -34,34 +36,35 @@ public class Employee_ScheduleController {
     private final ObservableList<WorkScheduleRecord> allRecords = FXCollections.observableArrayList();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-    @FXML
-    public void initialize() {
-        setupColumns();
-        setupMonthYearSelectors();
-        loadSampleData();
+    private int employeeId;
+
+    public void setEmployeeId(int id) {
+        this.employeeId = id;
+        loadFromDatabase();
         updateView();
     }
 
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+        setupColumns();
+        setupMonthYearSelectors();
+    }
+
     private void setupColumns() {
-        colDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDate()));
-        colShift.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getShift()));
-        colStartTime.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStartTime()));
-        colEndTime.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEndTime()));
-        colStatus.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getStatus()));
-        colNote.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getNote()));
-        colSalary.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getSalaryEarned() + " VND"));
+        colDate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getDate()));
+        colStartTime.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getStartTime()));
+        colEndTime.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEndTime()));
+        colStatus.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getStatus()));
     }
 
     private void setupMonthYearSelectors() {
         for (int m = 1; m <= 12; m++) {
             monthCombo.getItems().add(String.format("%02d", m));
         }
-
         int currentYear = LocalDate.now().getYear();
-        for (int y = currentYear - 5; y <= currentYear + 5; y++) {
+        for (int y = currentYear - 5; y <= currentYear + 1; y++) {
             yearCombo.getItems().add(String.valueOf(y));
         }
-
         monthCombo.setValue(String.format("%02d", LocalDate.now().getMonthValue()));
         yearCombo.setValue(String.valueOf(currentYear));
 
@@ -69,56 +72,113 @@ public class Employee_ScheduleController {
         yearCombo.setOnAction(e -> updateView());
     }
 
-    private void loadSampleData() {
-        allRecords.addAll(
-                new WorkScheduleRecord("01/05/2025", "Sáng", "07:00", "15:00", "Có mặt", "", 200000),
-                new WorkScheduleRecord("02/05/2025", "Sáng", "07:00", "15:00", "Đi muộn", "Đến lúc 13:15", 100000),
-                new WorkScheduleRecord("03/05/2025", "Sáng", "07:00", "15:00", "Vắng", "Không có lý do", 0),
-                new WorkScheduleRecord("04/05/2025", "Sáng", "07:00", "15:00", "Có mặt", "", 200000),
-                new WorkScheduleRecord("05/06/2025", "Chiều", "13:00", "21:00", "Có mặt", "", 220000),
-                new WorkScheduleRecord("06/06/2025", "Chiều", "13:00", "21:00", "Vắng", "Có lý do", 0)
-        );
+    private void loadFromDatabase() {
+        allRecords.clear();
+        String sql = "SELECT w.work_date, s.start_time, s.end_time, w.status " +
+                "FROM working w " +
+                "JOIN schedule s ON w.schedule_id = s.schedule_id " +
+                "WHERE w.employee_id = ? " +
+                "ORDER BY w.work_date";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    LocalDate d = rs.getDate("work_date").toLocalDate();
+                    String date = d.format(dateFormatter);
+
+                    String startTime = rs.getTime("start_time").toString();
+                    String endTime = rs.getTime("end_time").toString();
+
+                    String rawStatus = rs.getString("status");
+                    String status;
+                    if (rawStatus == null) {
+                        status = null;
+                    } else {
+                        status = switch (rawStatus) {
+                            case "D" -> "Có mặt";
+                            case "M" -> "Đi muộn";
+                            case "V" -> "Vắng";
+                            default -> "Phép";
+
+                        };
+                    }
+                    System.out.println("Loaded record: date=" + date + ", status=" + status);
+                    allRecords.add(new WorkScheduleRecord(date, startTime, endTime, status));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getScheduleInfoForMonthYear(int month, int year) {
+        String sql = "SELECT DISTINCT s.schedule_id, s.start_day, s.end_day, s.start_time, s.end_time " +
+                "FROM working w " +
+                "JOIN schedule s ON w.schedule_id = s.schedule_id " +
+                "WHERE w.employee_id = ? AND EXTRACT(MONTH FROM w.work_date) = ? AND EXTRACT(YEAR FROM w.work_date) = ?";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, employeeId);
+            ps.setInt(2, month);
+            ps.setInt(3, year);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int scheduleId = rs.getInt("schedule_id");
+                    int startDay = rs.getInt("start_day");
+                    int endDay = rs.getInt("end_day");
+                    String startTime = rs.getTime("start_time").toString();
+                    String endTime = rs.getTime("end_time").toString();
+
+                    return String.format("- Ca %d: T%d–T%d (%s–%s)",
+                            scheduleId, startDay, endDay, startTime, endTime);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return ""; // nếu không tìm thấy
     }
 
     private void updateView() {
-        String selectedMonth = monthCombo.getValue();
-        String selectedYear = yearCombo.getValue();
-        if (selectedMonth == null || selectedYear == null) return;
+        String sm = monthCombo.getValue();
+        String sy = yearCombo.getValue();
+        if (sm == null || sy == null) return;
 
-        // Lọc lịch theo tháng/năm
-        List<WorkScheduleRecord> filtered = allRecords.stream()
-                .filter(record -> {
-                    LocalDate date = LocalDate.parse(record.getDate(), dateFormatter);
-                    return date.getMonthValue() == Integer.parseInt(selectedMonth)
-                            && date.getYear() == Integer.parseInt(selectedYear);
-                }).collect(Collectors.toList());
+        int month = Integer.parseInt(sm);
+        int year  = Integer.parseInt(sy);
+        var filtered = allRecords.stream()
+                .filter(r -> {
+                    LocalDate d = LocalDate.parse(r.getDate(), dateFormatter);
+                    return d.getMonthValue() == month && d.getYear() == year;
+                })
+                .collect(Collectors.toList());
 
         scheduleTable.setItems(FXCollections.observableArrayList(filtered));
-
-        titleLabel.setText("Lịch làm việc của bạn - Tháng " + selectedMonth + "/" + selectedYear);
+        titleLabel.setText("Lịch làm việc - " + sm + "/" + sy);
+        String scheduleInfo = getScheduleInfoForMonthYear(month, year);
+        lbTimeWork.setText(scheduleInfo);
         updateSummary(filtered);
-        updateSalary(filtered);
     }
 
-    private void updateSummary(List<WorkScheduleRecord> records) {
-        long present = records.stream().filter(s -> s.getStatus().equals("Có mặt")).count();
-        long late = records.stream().filter(s -> s.getStatus().equals("Đi muộn")).count();
-        long absent = records.stream().filter(s -> s.getStatus().equals("Vắng")).count();
-
+    private void updateSummary(java.util.List<WorkScheduleRecord> records) {
+        long present = records.stream().filter(r -> "Có mặt".equals(r.getStatus())).count();
+        long late    = records.stream().filter(r -> "Đi muộn".equals(r.getStatus())).count();
+        long absent  = records.stream().filter(r -> "Vắng".equals(r.getStatus())).count();
+        long leave   = records.stream().filter(r-> "Phép".equals(r.getStatus())).count();
         presentLabel.setText("Có mặt: " + present + " buổi");
-        lateLabel.setText("Đi muộn: " + late + " buổi");
-        absentLabel.setText("Vắng: " + absent + " buổi");
-    }
-
-    private void updateSalary(List<WorkScheduleRecord> records) {
-        int total = records.stream().mapToInt(WorkScheduleRecord::getSalaryEarned).sum();
-        totalSalaryLabel.setText("Lương tạm tính: " + total + " VND");
+        lateLabel   .setText("Đi muộn: " + late    + " buổi");
+        absentLabel .setText("Vắng: "     + absent  + " buổi");
+        leaveLabel  .setText("Nghỉ phép: " + leave + " buổi");
     }
 
     @FXML
     private void handleShowDetail() {
         scheduleTable.setVisible(!scheduleTable.isVisible());
     }
+
     @FXML
     private void handleViewSchedule() {
         updateView();

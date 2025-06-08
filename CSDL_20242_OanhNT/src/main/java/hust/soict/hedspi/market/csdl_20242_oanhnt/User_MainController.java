@@ -1,6 +1,9 @@
 package hust.soict.hedspi.market.csdl_20242_oanhnt;
 
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -18,25 +21,48 @@ public class User_MainController {
     @FXML
     private Label welcomeLabel;
 
-    private Customer customer;
-    public void setCustomer(Customer customer) {
-        this.customer = customer;
-        welcomeLabel.setText("Xin chào, " + customer.getFullName());
+    public static int customerID = 1;
+    public static String currentUsername = "customer01";
+    @FXML
+    public void initialize() {
+        try {
+            switch (currentUsername) {
+                case "customer01" -> customerID = 1;
+                case "customer02" -> customerID = 2;
+                case "customer03" -> customerID = 3;
+                default -> customerID = 1;
+            }
+            String query = "SELECT fullname FROM customer WHERE customer_id = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, customerID);
+                ResultSet rs = ps.executeQuery();
+                if (rs.next()) {
+                    welcomeLabel.setText("Xin chào, " + rs.getString("fullname"));
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @FXML
     private void handleViewPersonalInfo() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("User_Info.fxml"));
-            Parent root = loader.load();
+            String query = "SELECT * FROM customer WHERE customer_id = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement ps = conn.prepareStatement(query)) {
+                ps.setInt(1, customerID);
+                ResultSet rs = ps.executeQuery();
+                FXMLLoader loader = new FXMLLoader(getClass().getResource("User_Info.fxml"));
+                Parent root = loader.load();
+                contentArea.getChildren().setAll(root);
+                User_InfoController infoController = loader.getController();
+                if(rs.next())infoController.setUserInfo(rs.getString("fullname"), rs.getString("phone"), rs.getString("email"));
 
-            User_InfoController infoController = loader.getController();
-            infoController.setUserInfo(customer.getFullName(), customer.getPhone(), customer.getEmail());
-            contentArea.getChildren().setAll(root);
-            //Stage stage = new Stage();
-            //stage.setTitle("Thông tin cá nhân");
-            //stage.setScene(new Scene(root));
-            //stage.show();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }

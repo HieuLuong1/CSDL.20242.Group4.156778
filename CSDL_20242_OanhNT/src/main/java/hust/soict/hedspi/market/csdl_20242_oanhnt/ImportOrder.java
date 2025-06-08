@@ -30,4 +30,7 @@ public class ImportOrder {
     public DoubleProperty totalValueProperty() { return totalValue; }
     public ListProperty<String> batchesProperty() { return batches; }
     public StringProperty supplierProperty() { return supplier; }
+    public ObservableList<String> getBatches() {
+        return batches.get();
+    }
 }

@@ -39,4 +39,8 @@ public class Batch {
     public void setCost(double cost) {
         this.cost = cost;
     }
+
+    public int getQuantityInStock() {
+        return totalQuantity - soldQuantity;
+    }
 }

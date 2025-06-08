@@ -23,4 +23,12 @@ public class Employee {
     public String getPhone() { return phone; }
     public String getAddress() { return address; }
     public String getIdCard() { return idCard; }
+    public void setId(String id) { this.id = id; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
+    public void setDob(String dob) { this.dob = dob; }
+    public void setGender(String gender) { this.gender = gender; }
+    public void setEmail(String email) { this.email = email; }
+    public void setPhone(String phone) { this.phone = phone; }
+    public void setAddress(String address) { this.address = address; }
+    public void setIdCard(String idCard) { this.idCard = idCard; }
 }

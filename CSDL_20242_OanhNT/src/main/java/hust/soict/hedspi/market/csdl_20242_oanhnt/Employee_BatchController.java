@@ -9,33 +9,24 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 
+import java.sql.Connection;
+import java.sql.Date;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.time.LocalDate;
 
 public class Employee_BatchController {
-    @FXML
-    private TableView<Batch> batchTable;
-
-    @FXML
-    private TableColumn<Batch, Integer> colBatchID;
-    @FXML
-    private TableColumn<Batch, LocalDate> colDate;
-    @FXML
-    private TableColumn<Batch, LocalDate> colExp;
-    @FXML
-    private TableColumn<Batch, Integer> colQuantity;
-    @FXML
-    private TableColumn<Batch, Integer> colSale;
-    @FXML
-    private TableColumn<Batch, String> colProd;
-    @FXML
-    private TableColumn<Batch, String> colSupplier;
-
-    @FXML
-    private TextField searchField;
-    @FXML
-    private RadioButton radioBtnByDate;
-    @FXML
-    private RadioButton radioBtnBySupplier;
+    @FXML private TableView<Batch> batchTable;
+    @FXML private TableColumn<Batch, Integer> colBatchID;
+    @FXML private TableColumn<Batch, LocalDate> colDate;
+    @FXML private TableColumn<Batch, LocalDate> colExp;
+    @FXML private TableColumn<Batch, Integer> colQuantity;
+    @FXML private TableColumn<Batch, Integer> colSale;
+    @FXML private TableColumn<Batch, String> colProd;
+    @FXML private TableColumn<Batch, String> colSupplier;
+    @FXML private TextField searchField;
+    @FXML private RadioButton radioBtnByDate;
+    @FXML private RadioButton radioBtnBySupplier;
 
     private final ObservableList<Batch> batchList = FXCollections.observableArrayList();
 
@@ -48,32 +39,70 @@ public class Employee_BatchController {
         colProd.setCellValueFactory(new PropertyValueFactory<>("productName"));
         colSupplier.setCellValueFactory(new PropertyValueFactory<>("supplier"));
 
+        loadBatchDataFromDB();
 
-        batchList.addAll(
-                new Batch(1, LocalDate.of(2025, 5, 1), LocalDate.of(2025, 8, 1), 100, 10, "Sữa TH True Milk", "TH Group", 10000),
-                new Batch(2, LocalDate.of(2025, 5, 3), LocalDate.of(2025, 9, 1), 150, 20, "Bánh Oreo", "Mondelez", 200000),
-                new Batch(3, LocalDate.of(2025, 5, 5), LocalDate.of(2025, 12, 31), 200, 50, "Coca-Cola lon", "Coca-Cola Việt Nam", 300000)
-        );
-
-        batchTable.setItems(batchList);
         searchField.textProperty().addListener((observable, oldValue, newValue) -> searchBatch());
         radioBtnByDate.setOnAction(e -> searchBatch());
         radioBtnBySupplier.setOnAction(e -> searchBatch());
     }
+
+    private void loadBatchDataFromDB() {
+        batchList.clear();
+        try {
+            Connection conn = DatabaseConnection.getConnection();
+            String sql =
+                    "SELECT " +
+                            "  b.batch_id, " +
+                            "  b.import_date, " +
+                            "  b.expiration_date, " +
+                            "  b.total_quantity, " +
+                            "  (b.total_quantity - b.quantity_in_stock) AS sold_quantity, " +
+                            "  p.product_name, " +
+                            "  s.supplier_name, " +
+                            "  b.value_batch " +
+                            "FROM batch b " +
+                            "  JOIN products p ON b.product_id = p.product_id " +
+                            "  JOIN import_reports ir ON b.import_id = ir.import_id " +
+                            "  JOIN suppliers s ON ir.supplier_id = s.supplier_id";
+
+            PreparedStatement stmt = conn.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                int batchId = rs.getInt("batch_id");
+                LocalDate importDate = rs.getDate("import_date").toLocalDate();
+
+                Date expRaw = rs.getDate("expiration_date");
+                LocalDate expDate = (expRaw != null) ? expRaw.toLocalDate() : null;
+
+                int totalQty = rs.getInt("total_quantity");
+                int soldQty = rs.getInt("sold_quantity");
+                String productName = rs.getString("product_name");
+                String supplier = rs.getString("supplier_name");
+                int value = rs.getInt("value_batch");
+
+                batchList.add(new Batch(batchId, importDate, expDate, totalQty, soldQty, productName, supplier, value));
+            }
+            rs.close();
+            stmt.close();
+            batchTable.setItems(batchList);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     private void searchBatch() {
         String keyword = searchField.getText().trim().toLowerCase();
 
         if (keyword.isEmpty()) {
-            batchTable.setItems(batchList);  // Hiện lại tất cả nếu ô tìm kiếm trống
+            batchTable.setItems(batchList);
             return;
         }
 
         ObservableList<Batch> filteredList = FXCollections.observableArrayList();
-
         for (Batch b : batchList) {
             if (radioBtnByDate.isSelected()) {
-
                 if (b.getImportDate().toString().contains(keyword)) {
                     filteredList.add(b);
                 }
@@ -83,7 +112,6 @@ public class Employee_BatchController {
                 }
             }
         }
-
         batchTable.setItems(filteredList);
     }
 }

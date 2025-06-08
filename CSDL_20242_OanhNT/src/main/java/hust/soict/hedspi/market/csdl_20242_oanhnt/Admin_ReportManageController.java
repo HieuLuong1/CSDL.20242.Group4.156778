@@ -1,6 +1,7 @@
 package hust.soict.hedspi.market.csdl_20242_oanhnt;
 
 import java.io.IOException;
+import java.sql.*;
 import java.time.LocalDate;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
@@ -19,7 +20,12 @@ public class Admin_ReportManageController {
     @FXML private TableColumn<Report, String> colMethod;
 
     @FXML private TableView<Batch> batchTable;
-    @FXML private TableColumn<Batch, String> colBatchId, colProduct, colImport, colExpiry, colQuantity;
+    @FXML private TableColumn<Batch, String> colBatchId;
+    @FXML private TableColumn<Batch, String> colProduct;
+    @FXML private TableColumn<Batch, String> colImport;
+    @FXML private TableColumn<Batch, String> colExpiry;
+    @FXML private TableColumn<Batch, String> colQuantity;
+
     @FXML private Button btnCreateReport;
 
     private final ObservableList<Report> reportList = FXCollections.observableArrayList();
@@ -27,34 +33,117 @@ public class Admin_ReportManageController {
 
     @FXML
     public void initialize() {
+        // Bind report table columns
         colReportId.setCellValueFactory(data -> data.getValue().reportIdProperty());
         colDate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getDate().toString()));
         colMethod.setCellValueFactory(data -> data.getValue().methodProperty());
-
         reportTable.setItems(reportList);
 
+        // Bind batch table columns (5 columns as per FXML)
         colBatchId.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getBatchId())));
         colProduct.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getProductName()));
         colImport.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getImportDate().toString()));
         colExpiry.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getExpiryDate().toString()));
-        colQuantity.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getTotalQuantity() - data.getValue().getSoldQuantity())));
+        colQuantity.setCellValueFactory(data -> new SimpleStringProperty(String.valueOf(data.getValue().getQuantityInStock())));
 
-        Batch b1 = new Batch(101, LocalDate.of(2025, 4, 1), LocalDate.of(2025, 5, 31), 100, 90, "Sữa Vinamilk", "Vinamilk Co.", 12000);
-        Batch b2 = new Batch(102, LocalDate.of(2025, 3, 20), LocalDate.of(2025, 6, 1), 80, 70, "Nước suối", "Coca", 5000);
-        Batch b3 = new Batch(103, LocalDate.of(2025, 1, 15), LocalDate.of(2025, 6, 5), 90, 85, "Mì Hảo Hảo", "Acecook", 4500);
+        // Load data
+        loadReportsFromDB();
+        loadAvailableBatchesFromDB();
 
-        availableBatches.addAll(b1, b2, b3);
-
-        reportList.add(new Report("RP001", LocalDate.of(2025, 6, 1), "Tiêu hủy", b1));
-        reportList.add(new Report("RP002", LocalDate.of(2025, 6, 2), "Sử dụng làm nước rửa", b2));
-
+        // Show batch details when a report is selected
         reportTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSel, newSel) -> {
-            if (newSel != null && newSel.getBatch() != null) {
+            if (newSel != null) {
                 batchTable.setItems(FXCollections.observableArrayList(newSel.getBatch()));
             } else {
                 batchTable.setItems(FXCollections.observableArrayList());
             }
         });
+
+        btnCreateReport.setOnAction(e -> handleOpenCreateReport());
+    }
+
+    private void loadReportsFromDB() {
+        String reportSql = "SELECT incident_id, report_date, description, batch_id FROM incident_reports";
+        String batchSql = "SELECT batch_id, import_date, expiration_date, total_quantity, quantity_in_stock, product_id " +
+                "FROM batch WHERE batch_id = ?";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement psReport = conn.prepareStatement(reportSql);
+             ResultSet rsReport = psReport.executeQuery()) {
+
+            reportList.clear();
+            while (rsReport.next()) {
+                int id = rsReport.getInt("incident_id");
+                LocalDate date = rsReport.getDate("report_date").toLocalDate();
+                String desc = rsReport.getString("description");
+                int batchId = rsReport.getInt("batch_id");
+
+                // Load corresponding batch
+                Batch batch = null;
+                try (PreparedStatement psBatch = conn.prepareStatement(batchSql)) {
+                    psBatch.setInt(1, batchId);
+                    try (ResultSet rsBatch = psBatch.executeQuery()) {
+                        if (rsBatch.next()) {
+                            int total = rsBatch.getInt("total_quantity");
+                            int inStock = rsBatch.getInt("quantity_in_stock");
+                            batch = new Batch(
+                                    rsBatch.getInt("batch_id"),
+                                    rsBatch.getDate("import_date").toLocalDate(),
+                                    rsBatch.getDate("expiration_date").toLocalDate(),
+                                    total,
+                                    total - inStock,
+                                    // retrieve product name via join if needed
+                                    getProductName(conn, rsBatch.getInt("product_id")),
+                                    null, 0);
+                        }
+                    }
+                }
+                if (batch != null) {
+                    String code = "RP" + String.format("%03d", id);
+                    reportList.add(new Report(code, date, desc, batch));
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void loadAvailableBatchesFromDB() {
+        String sql = "SELECT b.batch_id, b.import_date, b.expiration_date, b.total_quantity, b.quantity_in_stock, b.product_id " +
+                "FROM batch b WHERE b.quantity_in_stock > 0 AND b.batch_id NOT IN (SELECT batch_id FROM incident_reports)";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            availableBatches.clear();
+            while (rs.next()) {
+                int total = rs.getInt("total_quantity");
+                int inStock = rs.getInt("quantity_in_stock");
+                Batch batch = new Batch(
+                        rs.getInt("batch_id"),
+                        rs.getDate("import_date").toLocalDate(),
+                        rs.getDate("expiration_date").toLocalDate(),
+                        total,
+                        total - inStock,
+                        getProductName(conn, rs.getInt("product_id")),
+                        null, 0);
+                availableBatches.add(batch);
+            }
+            // note: batchTable not set here - it's only for create form
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getProductName(Connection conn, int productId) throws SQLException {
+        String name = "";
+        String sql = "SELECT product_name FROM products WHERE product_id = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, productId);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) name = rs.getString(1);
+            }
+        }
+        return name;
     }
 
     @FXML
@@ -62,17 +151,15 @@ public class Admin_ReportManageController {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("Admin_CreateReport.fxml"));
             Parent root = loader.load();
-
-            Admin_CreateReportController controller = loader.getController();
-            controller.setReportList(reportList);
-            controller.setAvailableBatches(availableBatches);
-
+            Admin_CreateReportController ctrl = loader.getController();
+            ctrl.setReportList(reportList);
+            ctrl.setAvailableBatches(availableBatches);
             Stage stage = new Stage();
             stage.setTitle("Tạo biên bản mới");
             stage.setScene(new Scene(root));
             stage.show();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 }

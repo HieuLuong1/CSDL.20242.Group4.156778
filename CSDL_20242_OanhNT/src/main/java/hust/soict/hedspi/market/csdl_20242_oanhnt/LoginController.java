@@ -34,11 +34,17 @@ public class LoginController {
     public void initialize() {
         accountPassword.put("customer01", "123456");
         accountRole.put("customer01", "customer");
-        customerAccounts.put("customer01", new Customer("KH001", "Nguyễn Văn A", "nva@gmail.com", "0123456789"));
+        accountPassword.put("customer02", "123456");
+        accountRole.put("customer02", "customer");
+        accountPassword.put("customer03", "123456");
+        accountRole.put("customer03", "customer");
 
         accountPassword.put("employee01", "abc123");
         accountRole.put("employee01", "employee");
-        employeeAccounts.put("employee01", new Employee("NV001", "Trần Thị B", "12/03/1998", "Nữ", "tranb@gmail.com", "0987654321", "Hà Nội", "123456789012"));
+        accountPassword.put("employee02", "abc123");
+        accountRole.put("employee02", "employee");
+        accountPassword.put("employee03", "abc123");
+        accountRole.put("employee03", "employee");
 
         accountPassword.put("admin01", "admin123");
         accountRole.put("admin01", "admin");
@@ -64,22 +70,24 @@ public class LoginController {
 
         try {
             if (role.equals("customer")) {
+                User_MainController.currentUsername = username;
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("User_MainLayout.fxml"));
                 Parent root = loader.load();
 
                 User_MainController controller = loader.getController();
-                controller.setCustomer(customerAccounts.get(username));
+//                controller.setCustomer(customerAccounts.get(username));
 
                 Stage stage = (Stage) usernameField.getScene().getWindow();
                 stage.setScene(new Scene(root));
                 stage.setTitle("Trang người dùng");
             }
             else if (role.equals("employee")) {
+                Employee_MainController.employeeUsername = username;
                 FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_MainLayout.fxml"));
                 Parent root = loader.load();
 
                 Employee_MainController controller = loader.getController();
-                controller.setEmployee(employeeAccounts.get(username));
+                //     controller.setEmployee(employeeAccounts.get(username));
 
                 Stage stage = (Stage) usernameField.getScene().getWindow();
                 stage.setScene(new Scene(root));

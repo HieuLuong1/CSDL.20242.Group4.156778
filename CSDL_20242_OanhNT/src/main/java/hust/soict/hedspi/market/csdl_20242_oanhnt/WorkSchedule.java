@@ -16,6 +16,13 @@ public class WorkSchedule {
         this.status = status;
         this.note = note;
     }
+    public WorkSchedule(String date,String startTime, String endTime, String status) {
+        this.date = date;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.status = status;
+    }
+
 
     public String getDate() { return date; }
     public String getShift() { return shift; }

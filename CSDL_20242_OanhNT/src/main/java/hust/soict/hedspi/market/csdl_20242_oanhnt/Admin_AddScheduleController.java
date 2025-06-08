@@ -5,96 +5,171 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
+import javafx.event.ActionEvent;
+
+import java.sql.*;
+import java.time.DayOfWeek;
+import java.time.LocalDate;
 
 public class Admin_AddScheduleController {
-
     @FXML private ComboBox<Integer> monthComboBox;
     @FXML private ComboBox<String> employeeComboBox;
     @FXML private ComboBox<String> scheduleTemplateComboBox;
-
+    @FXML private DatePicker dpFirstDate;
     @FXML private TableView<AssignedSchedule> assignedScheduleTable;
     @FXML private TableColumn<AssignedSchedule, String> colEmployeeId;
     @FXML private TableColumn<AssignedSchedule, String> colEmployeeName;
     @FXML private TableColumn<AssignedSchedule, String> colTemplate;
 
+    private String selectedEmployeeId;
+
     @FXML
     public void initialize() {
-        // Load tháng
         ObservableList<Integer> months = FXCollections.observableArrayList();
         for (int i = 1; i <= 12; i++) months.add(i);
         monthComboBox.setItems(months);
-        monthComboBox.getSelectionModel().selectFirst();
 
-        // Load nhân viên (demo)
-        employeeComboBox.setItems(FXCollections.observableArrayList(
-                "E001 - Nguyễn Văn A",
-                "E002 - Trần Thị B",
-                "E003 - Lê Văn C"
-        ));
+        int currentMonth = LocalDate.now().getMonthValue();
+        monthComboBox.getSelectionModel().select(Integer.valueOf(currentMonth));
 
-        // Load mẫu lịch làm việc
-        scheduleTemplateComboBox.setItems(FXCollections.observableArrayList(
-                "T2-T7 (08:00 - 15:00)",
-                "T2-T7 (15:00 - 22:00)",
-                "T3-CN (08:00 - 15:00)",
-                "T3-CN (15:00 - 22:00)"
-        ));
+        loadEmployees();
+        loadScheduleTemplates();
 
-        // Cấu hình bảng
-        colEmployeeId.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEmployeeId()));
-        colEmployeeName.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getEmployeeName()));
-        colTemplate.setCellValueFactory(data -> new SimpleStringProperty(data.getValue().getTemplateName()));
+        colEmployeeId.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEmployeeId()));
+        colEmployeeName.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEmployeeName()));
+        colTemplate.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getTemplateName()));
+
+        monthComboBox.setOnAction(a -> reload());
+        employeeComboBox.setOnAction(a -> reload());
+
+        if (selectedEmployeeId != null) applySelection();
+    }
+
+    public void setSelectedEmployeeId(String id) {
+        this.selectedEmployeeId = id;
+        if (employeeComboBox.getItems().size() > 0) applySelection();
+    }
+
+    private void applySelection() {
+        for (String item : employeeComboBox.getItems()) {
+            if (item.startsWith(selectedEmployeeId + " -")) {
+                employeeComboBox.getSelectionModel().select(item);
+                break;
+            }
+        }
+        reload();
+    }
+
+    private void loadEmployees() {
+        ObservableList<String> list = FXCollections.observableArrayList();
+        String sql = "SELECT employee_id, firstname || ' ' || lastname FROM employee";
+        try (Connection c = DatabaseConnection.getConnection();
+             Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery(sql)) {
+            while (rs.next()) {
+                list.add(rs.getInt(1) + " - " + rs.getString(2));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        employeeComboBox.setItems(list);
+    }
+
+    private void loadScheduleTemplates() {
+        ObservableList<String> list = FXCollections.observableArrayList();
+        String sql = "SELECT schedule_id, start_day, end_day, start_time, end_time FROM schedule";
+        try (Connection c = DatabaseConnection.getConnection();
+             Statement s = c.createStatement();
+             ResultSet rs = s.executeQuery(sql)) {
+            while (rs.next()) {
+                list.add(rs.getInt("schedule_id") + " - T" + rs.getInt("start_day") + "-T" + rs.getInt("end_day") +
+                        " (" + rs.getTime("start_time") + "-" + rs.getTime("end_time") + ")");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        scheduleTemplateComboBox.setItems(list);
     }
 
     @FXML
-    private void handleAssignSchedule() {
-        String selectedEmployee = employeeComboBox.getValue();
-        String selectedTemplate = scheduleTemplateComboBox.getValue();
-        Integer selectedMonth = monthComboBox.getValue();
-
-        if (selectedEmployee == null || selectedTemplate == null || selectedMonth == null) {
-            showAlert("Vui lòng chọn đủ thông tin.");
+    private void handleAssignSchedule(ActionEvent e) {
+        if (employeeComboBox.getValue() == null || scheduleTemplateComboBox.getValue() == null || monthComboBox.getValue() == null) {
+            new Alert(Alert.AlertType.INFORMATION, "Chọn đủ thông tin").showAndWait();
             return;
         }
-
-        String[] parts = selectedEmployee.split(" - ");
-        String employeeId = parts[0];
-        String employeeName = parts[1];
-
-        // TODO: Ghi dữ liệu gán lịch vào cơ sở dữ liệu
-
-        showAlert("Đã gán lịch cho " + employeeName + " trong tháng " + selectedMonth + ".");
+        assign();
+        reload();
     }
 
     @FXML
     private void handleLoadAssignedSchedules() {
-        Integer selectedMonth = monthComboBox.getValue();
-        if (selectedMonth == null) {
-            showAlert("Vui lòng chọn tháng.");
+        reload();
+    }
+
+    private void assign() {
+        int emp = Integer.parseInt(employeeComboBox.getValue().split(" -")[0]);
+        int sch = Integer.parseInt(scheduleTemplateComboBox.getValue().split(" -")[0]);
+        int m = monthComboBox.getValue();
+        if (dpFirstDate.getValue() == null) {
+            new Alert(Alert.AlertType.WARNING, "Vui lòng chọn ngày làm việc").showAndWait();
             return;
         }
+        LocalDate selectedDate = dpFirstDate.getValue();
 
-        // TODO: Truy vấn lịch từ DB theo tháng (ở đây demo dữ liệu)
-        ObservableList<AssignedSchedule> data = FXCollections.observableArrayList(
-                new AssignedSchedule("E001", "Nguyễn Văn A", "T2-T7 (08:00 - 15:00)"),
-                new AssignedSchedule("E002", "Trần Thị B", "T3-CN (15:00 - 22:00)")
-        );
+        String sel = "SELECT start_day, end_day FROM schedule WHERE schedule_id=?";
+        String ins = "INSERT INTO working(employee_id, schedule_id, work_date) VALUES (?, ?, ?)";
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sel);
+             PreparedStatement pi = conn.prepareStatement(ins)) {
+
+            ps.setInt(1, sch);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    pi.setInt(1, emp);
+                    pi.setInt(2, sch);
+                    pi.setDate(3, Date.valueOf(selectedDate));
+                    pi.executeUpdate();
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+    }
+
+
+    private void reload() {
+        if (monthComboBox.getValue() == null) return;
+        int m = monthComboBox.getValue();
+
+        ObservableList<AssignedSchedule> data = FXCollections.observableArrayList();
+        String q = "SELECT DISTINCT e.employee_id, e.firstname || ' ' || e.lastname AS name, " +
+                "'T' || s.start_day || '-T' || s.end_day || ' (' || s.start_time || '-' || s.end_time || ')' AS tmpl " +
+                "FROM working w JOIN employee e USING(employee_id) JOIN schedule s USING(schedule_id) " +
+                "WHERE EXTRACT(MONTH FROM work_date) = ?";
+
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(q)) {
+            ps.setInt(1, m);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    data.add(new AssignedSchedule(
+                            rs.getString("employee_id"),
+                            rs.getString("name"),
+                            rs.getString("tmpl")
+                    ));
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
+
         assignedScheduleTable.setItems(data);
     }
 
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setTitle("Thông báo");
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
-    // Inner class cho bảng
     public static class AssignedSchedule {
-        private final String employeeId;
-        private final String employeeName;
-        private final String templateName;
+        private final String employeeId, employeeName, templateName;
 
         public AssignedSchedule(String employeeId, String employeeName, String templateName) {
             this.employeeId = employeeId;
@@ -102,16 +177,8 @@ public class Admin_AddScheduleController {
             this.templateName = templateName;
         }
 
-        public String getEmployeeId() {
-            return employeeId;
-        }
-
-        public String getEmployeeName() {
-            return employeeName;
-        }
-
-        public String getTemplateName() {
-            return templateName;
-        }
+        public String getEmployeeId() { return employeeId; }
+        public String getEmployeeName() { return employeeName; }
+        public String getTemplateName() { return templateName; }
     }
 }

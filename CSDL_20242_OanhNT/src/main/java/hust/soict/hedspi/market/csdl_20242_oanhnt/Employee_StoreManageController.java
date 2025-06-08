@@ -8,40 +8,110 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.stage.Stage;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+
 public class Employee_StoreManageController {
     private ObservableList<Item> items = FXCollections.observableArrayList();
     private Item selectedItem;
-    @FXML
-    private TableView<Item> productTable;
-    @FXML
-    private TextField searchField;
+    private int employeeId; // ID nhân viên hiện tại
+
+    @FXML private TableView<Item> productTable;
+    @FXML private TextField searchField;
     @FXML private TableColumn<Item, Integer> colID;
     @FXML private TableColumn<Item, String> colProductName;
     @FXML private TableColumn<Item, String> colUnit;
     @FXML private TableColumn<Item, Double> colPrice;
     @FXML private TableColumn<Item, Integer> colQuantity;
     @FXML private TableColumn<Item, String> colCategory;
-    @FXML private TableColumn<Item, String> colSupplier;
-    @FXML
-    private TextField selectedProductNameField;
-    @FXML
-    private TextField updateCategoryField;
+    @FXML private TextField selectedProductNameField;
+    @FXML private TextField updateCategoryField;
+    @FXML private TextField updatePriceField;
+    //@FXML private ComboBox<String> creatorFilter;
+
+    /**
+     * Thiết lập employeeId: gọi từ MainController sau khi đăng nhập
+     */
+    public void setEmployeeId(int employeeId) {
+        this.employeeId = employeeId;
+    }
 
     @FXML
-    private TextField updatePriceField;
+    public void initialize() {
+        // Cột bảng
+        colID.setCellValueFactory(new PropertyValueFactory<>("productId"));
+        colProductName.setCellValueFactory(new PropertyValueFactory<>("name"));
+        colUnit.setCellValueFactory(new PropertyValueFactory<>("unit"));
+        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
+        colQuantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
+        colCategory.setCellValueFactory(new PropertyValueFactory<>("category"));
+
+
+        // Load dữ liệu
+        loadProductDataFromDB();
+
+        // Lọc tìm kiếm
+        FilteredList<Item> filtered = new FilteredList<>(items, p -> true);
+        searchField.textProperty().addListener((obs, oldV, newV) -> {
+            filtered.setPredicate(item -> newV == null || newV.isEmpty() ||
+                    item.getName().toLowerCase().contains(newV.toLowerCase()));
+        });
+        SortedList<Item> sorted = new SortedList<>(filtered);
+        sorted.comparatorProperty().bind(productTable.comparatorProperty());
+        productTable.setItems(sorted);
+
+        // Chọn dòng
+        productTable.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
+            selectedItem = n;
+            if (n != null) selectedProductNameField.setText(n.getName());
+        });
+    }
+
+    public void loadProductDataFromDB() {
+        items.clear();
+        String sql =
+                "SELECT DISTINCT p.product_id, p.product_name, p.unit, p.price_with_tax, p.quantity_in_stock, " +
+                        "c.category_name " +
+                        "FROM products p " +
+                        "JOIN categories c ON p.category_id = c.category_id "+
+                        "ORDER BY p.product_id ASC";
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                items.add(new Item(
+                        rs.getInt("product_id"),
+                        rs.getString("product_name"),
+                        rs.getString("unit"),
+                        rs.getDouble("price_with_tax"),
+                        rs.getInt("quantity_in_stock"),
+                        rs.getString("category_name")
+
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
     @FXML
     public void handleAddProduct() {
         try {
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_StoreAdd.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource(
+                    "/hust/soict/hedspi/market/csdl_20242_oanhnt/Employee_StoreAdd.fxml"));
             Parent root = loader.load();
-            Employee_StoreAddController addController = loader.getController();
-            addController.setStoreManageController(this);
+            Employee_StoreAddController ctrl = loader.getController();
+            ctrl.setStoreManageController(this);
+            ctrl.setEmployeeId(this.employeeId);
+
             Stage stage = new Stage();
             stage.setTitle("Thêm sản phẩm mới");
             stage.setScene(new Scene(root));
@@ -50,103 +120,117 @@ public class Employee_StoreManageController {
             e.printStackTrace();
         }
     }
-    public void addItem(Item item) {
-        items.add(item);
-    }
-    public void initialize() {
-        Item.resetIdCounter();
-        colID.setCellValueFactory(new PropertyValueFactory<>("id"));
-        colProductName.setCellValueFactory(new PropertyValueFactory<>("name"));
-        colUnit.setCellValueFactory(new PropertyValueFactory<>("unit"));
-        colPrice.setCellValueFactory(new PropertyValueFactory<>("price"));
-        colQuantity.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-        colCategory.setCellValueFactory(new PropertyValueFactory<>("category"));
-        colSupplier.setCellValueFactory(new PropertyValueFactory<>("supplier"));
-
-        items.addAll(
-                new Item("Sữa TH True Milk", "Hộp", 20000, 100, "Đồ uống",  "TH Group"),
-                new Item("Bánh Oreo", "Gói", 15000, 80, "Bánh kẹo", "Mondelez"),
-                new Item("Dầu ăn Simply", "Chai", 45000, 50, "Gia vị", "Cái Lân"),
-                new Item("Nước mắm Nam Ngư", "Chai", 28000, 70, "Gia vị", "Masan"),
-                new Item("Coca-Cola lon", "Lon", 10000, 100, "Nước ngọt", "Coca-Cola Việt Nam")
-        );
-
-        FilteredList<Item> filteredData = new FilteredList<>(items, p -> true);
-
-        searchField.textProperty().addListener((observable, oldValue, newValue) -> {
-            filteredData.setPredicate(item -> {
-                if (newValue == null || newValue.isEmpty()) {
-                    return true;
-                }
-                String lowerCaseFilter = newValue.toLowerCase();
-
-                if (item.getName().toLowerCase().contains(lowerCaseFilter)) {
-                    return true;
-                }
-                return false;
-            });
-        });
-
-        SortedList<Item> sortedData = new SortedList<>(filteredData);
-        sortedData.comparatorProperty().bind(productTable.comparatorProperty());
-
-        productTable.setItems(sortedData);
-
-        productTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                selectedItem = newSelection;
-                selectedProductNameField.setText(selectedItem.getName());
-            }
-        });
-    }
 
     @FXML
     public void handleRemoveProduct() {
         if (selectedItem != null) {
-            items.remove(selectedItem);
-            productTable.getSelectionModel().clearSelection();
-            selectedProductNameField.clear();
-            selectedItem = null;
-        } else {
-            System.out.println("Chưa chọn sản phẩm để xóa!");
+            String sql = "DELETE FROM products WHERE product_id = ?";
+            try (Connection conn = DatabaseConnection.getConnection();
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
+                stmt.setInt(1, selectedItem.getProductId());
+                int affected = stmt.executeUpdate();
+                if (affected > 0) {
+                    items.remove(selectedItem); // Xóa khỏi danh sách hiển thị
+                    selectedProductNameField.clear();
+                    selectedItem = null;
+                } else {
+                    System.err.println("Xoá thất bại: không tìm thấy product_id.");
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
+
+
     @FXML
-    private void handleUpdateProduct() {
+    public void handleUpdateProduct() {
         if (selectedItem != null) {
-            String newCategory = updateCategoryField.getText().trim();
+            String newCatName = updateCategoryField.getText().trim();
             String newPriceStr = updatePriceField.getText().trim();
-
-            if (newCategory.isEmpty() && newPriceStr.isEmpty()) {
-                System.out.println("Vui lòng nhập loại hoặc đơn giá mới để cập nhật.");
-                return;
-            }
-
-            if (!newCategory.isEmpty()) {
-                selectedItem.setCategory(newCategory);
-            }
+            Double newPrice = null;
 
             if (!newPriceStr.isEmpty()) {
                 try {
-                    double newPrice = Double.parseDouble(newPriceStr);
-                    selectedItem.setPrice(newPrice);
+                    newPrice = Double.parseDouble(newPriceStr);
                 } catch (NumberFormatException e) {
-                    System.out.println("Đơn giá phải là số hợp lệ!");
+                    System.err.println("Giá không hợp lệ.");
                     return;
                 }
             }
 
-            productTable.refresh();
+            try (Connection conn = DatabaseConnection.getConnection()) {
+                conn.setAutoCommit(false);
 
-            // Xóa dữ liệu sau khi cập nhật
-            updateCategoryField.clear();
-            updatePriceField.clear();
+                Integer newCatId = null;
 
-            System.out.println("Cập nhật sản phẩm thành công!");
-        } else {
-            System.out.println("Chưa chọn sản phẩm để cập nhật!");
+                // Nếu có nhập category mới, tra cứu hoặc thêm mới category
+                if (!newCatName.isEmpty()) {
+                    // Kiểm tra xem category đã tồn tại chưa
+                    String checkCatSql = "SELECT category_id FROM categories WHERE category_name = ?";
+                    try (PreparedStatement checkStmt = conn.prepareStatement(checkCatSql)) {
+                        checkStmt.setString(1, newCatName);
+                        ResultSet rs = checkStmt.executeQuery();
+                        if (rs.next()) {
+                            newCatId = rs.getInt("category_id");
+                        } else {
+                            // Nếu chưa có, thêm mới
+                            String insertCatSql = "INSERT INTO categories (category_name) VALUES (?) RETURNING category_id";
+                            try (PreparedStatement insertStmt = conn.prepareStatement(insertCatSql)) {
+                                insertStmt.setString(1, newCatName);
+                                ResultSet inserted = insertStmt.executeQuery();
+                                if (inserted.next()) {
+                                    newCatId = inserted.getInt("category_id");
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Update bảng products
+                StringBuilder updateSql = new StringBuilder("UPDATE products SET ");
+                boolean needComma = false;
+
+                if (newPrice != null) {
+                    updateSql.append("price_with_tax = ?");
+                    needComma = true;
+                }
+
+                if (newCatId != null) {
+                    if (needComma) updateSql.append(", ");
+                    updateSql.append("category_id = ?");
+                }
+
+                updateSql.append(" WHERE product_id = ?");
+
+                try (PreparedStatement updateStmt = conn.prepareStatement(updateSql.toString())) {
+                    int idx = 1;
+                    if (newPrice != null) updateStmt.setDouble(idx++, newPrice);
+                    if (newCatId != null) updateStmt.setInt(idx++, newCatId);
+                    updateStmt.setInt(idx, selectedItem.getProductId());
+                    int updated = updateStmt.executeUpdate();
+
+                    if (updated > 0) {
+                        if (newPrice != null) selectedItem.setPrice(newPrice);
+                        if (newCatName != null && !newCatName.isEmpty()) selectedItem.setCategory(newCatName);
+                        productTable.refresh();
+                    }
+                }
+
+                conn.commit();
+                updateCategoryField.clear();
+                updatePriceField.clear();
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
+
+
+    // Các phương thức handleBatch, resetItemIdCounter giữ nguyên nếu có
+
+
     public void handleBatch(){
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_Batch.fxml"));
@@ -161,7 +245,5 @@ public class Employee_StoreManageController {
             e.printStackTrace();
         }
     }
-    public void resetItemIdCounter() {
-        Item.resetIdCounter();
-    }
+
 }

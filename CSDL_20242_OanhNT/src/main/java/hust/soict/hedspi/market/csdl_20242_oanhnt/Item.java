@@ -1,55 +1,53 @@
 package hust.soict.hedspi.market.csdl_20242_oanhnt;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class Item {
+    private int productId;      // ID thực từ CSDL
     private String name;
     private String unit;
     private double price;
     private int quantity;
     private String category;
-    private String supplier;
-    private int id;
-    private static int idCounter = 1;
-    public Item(String name, String unit, double price, int quantity, String category, String supplier) {
-        this.id = idCounter++;
+
+    public Item(int productId, String name, String unit, double price, int quantity, String category) {
+        this.productId = productId;
         this.name = name;
         this.unit = unit;
         this.price = price;
         this.quantity = quantity;
         this.category = category;
-        this.supplier = supplier;
     }
+
+    // Getter
+    public int getProductId() {
+        return productId;
+    }
+
     public String getName() {
         return name;
     }
+
     public String getUnit() {
         return unit;
     }
+
     public double getPrice() {
         return price;
     }
+
     public int getQuantity() {
         return quantity;
     }
+
     public String getCategory() {
         return category;
     }
-    public String getSupplier() {
-        return supplier;
-    }
-    public int getId() {
-        return id;
-    }
+
+    // Setter
     public void setCategory(String category) {
         this.category = category;
     }
 
     public void setPrice(double price) {
         this.price = price;
-    }
-    public static void resetIdCounter() {
-        idCounter = 1;
     }
 }
