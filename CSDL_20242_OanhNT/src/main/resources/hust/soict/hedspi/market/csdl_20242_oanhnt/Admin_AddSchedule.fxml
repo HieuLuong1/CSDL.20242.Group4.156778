@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox alignment="CENTER" spacing="10" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.Admin_AddScheduleController">
+    <padding>
+        <Insets bottom="20" left="20" right="20" top="20" />
+    </padding>
+
+    <Label style="-fx-font-size: 18; -fx-font-weight: bold;" text="Gán Lịch Làm Việc Cho Nhân Viên" />
+
+    <!-- Phần gán lịch -->
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label minWidth="100" text="Chọn Tháng:" />
+        <ComboBox fx:id="monthComboBox" prefWidth="150" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label minWidth="100" text="Chọn Nhân Viên:" />
+        <ComboBox fx:id="employeeComboBox" prefWidth="200" />
+    </HBox>
+
+    <HBox alignment="CENTER_LEFT" spacing="10">
+        <Label minWidth="100" text="Chọn Mẫu Lịch:" />
+        <ComboBox fx:id="scheduleTemplateComboBox" prefWidth="300" />
+    </HBox>
+   <HBox prefHeight="0.0" prefWidth="600.0">
+      <children>
+         <Label text="Chọn ngày đầu tiên:" />
+         <DatePicker fx:id="dpFirstDate">
+            <HBox.margin>
+               <Insets left="4.0" />
+            </HBox.margin>
+         </DatePicker>
+      </children>
+   </HBox>
+
+    <HBox alignment="CENTER" spacing="10">
+        <Button onAction="#handleAssignSchedule" prefWidth="150" text="Gán Lịch" />
+        <Button onAction="#handleLoadAssignedSchedules" prefWidth="150" text="Tải Lịch Đã Gán" />
+    </HBox>
+
+    <Separator prefWidth="600" />
+
+    <!-- Bảng xem lịch đã gán -->
+    <Label style="-fx-font-size: 16; -fx-font-weight: bold;" text="Lịch Đã Gán Trong Tháng" />
+
+    <TableView fx:id="assignedScheduleTable" prefHeight="300" prefWidth="600">
+        <columns>
+            <TableColumn fx:id="colEmployeeId" prefWidth="100" text="Mã NV" />
+            <TableColumn fx:id="colEmployeeName" prefWidth="200" text="Tên Nhân Viên" />
+            <TableColumn fx:id="colTemplate" prefWidth="300" text="Lịch Làm Việc" />
+        </columns>
+    </TableView>
+
+</VBox>

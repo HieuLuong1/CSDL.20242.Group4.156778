@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<AnchorPane prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.Employee_ScheduleController">
+    <children>
+        <VBox spacing="15" AnchorPane.bottomAnchor="20.0" AnchorPane.leftAnchor="20.0" AnchorPane.rightAnchor="20.0" AnchorPane.topAnchor="20.0">
+            <children>
+
+                <!-- Chọn tháng/năm -->
+                <HBox spacing="10">
+                    <Label text="Tháng:" />
+                    <ComboBox fx:id="monthCombo" prefWidth="100" />
+
+                    <Label text="Năm:" />
+                    <ComboBox fx:id="yearCombo" prefWidth="100" />
+
+                    <Button fx:id="btnViewSchedule" onAction="#handleViewSchedule" text="Xem lịch" />
+               <Button fx:id="btnSalary" mnemonicParsing="false" onAction="#handleWatchSalary" text="Bảng lương " />
+                </HBox>
+
+                <!-- Tiêu đề -->
+                <Label fx:id="titleLabel" style="-fx-font-size: 18px; -fx-font-weight: bold;" text="Lịch làm việc của bạn:" />
+
+                <!-- Tổng kết số buổi -->
+                <HBox spacing="20">
+                    <Label fx:id="presentLabel" text="Có mặt: 0 buổi" />
+                    <Label fx:id="lateLabel" text="Đi muộn: 0 buổi" />
+                    <Label fx:id="absentLabel" text="Vắng: 0 buổi" />
+               <Label fx:id="leaveLabel" text="Nghỉ phép: 0 buổi" />
+                </HBox>
+
+                <Label fx:id="lbTimeWork" style="-fx-font-weight: bold;" />
+
+                <!-- Nút hiển thị chi tiết -->
+                <Button fx:id="btnShowDetail" onAction="#handleShowDetail" text="Xem chi tiết từng ngày" />
+
+                <!-- Bảng lịch -->
+                <TableView fx:id="scheduleTable" prefHeight="350" visible="false">
+                    <columns>
+                        <TableColumn fx:id="colDate" prefWidth="150" text="Ngày" />
+                        <TableColumn fx:id="colStartTime" prefWidth="150" text="Bắt đầu" />
+                        <TableColumn fx:id="colEndTime" prefWidth="150" text="Kết thúc" />
+                        <TableColumn fx:id="colStatus" prefWidth="150" text="Trạng thái" />
+                    </columns>
+                </TableView>
+            </children>
+        </VBox>
+    </children>
+</AnchorPane>
