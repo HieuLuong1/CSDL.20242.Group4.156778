@@ -28,6 +28,7 @@ public class Employee_MainController {
                 case "employee01" -> employeeID = 1;
                 case "employee02" -> employeeID = 2;
                 case "employee03" -> employeeID = 3;
+                case "employee04" -> employeeID = 4;
                 default -> employeeID = 1;
             }
             String query = "SELECT lastname, firstname FROM employee WHERE employee_id = ?";

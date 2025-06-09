@@ -112,11 +112,11 @@ public class Employee_CustomerManagerController {
         String phone    = customerPhoneField.getText().trim();
         String email    = customerEmailField.getText().trim();
 
-        if (fullname.isEmpty() || phone.isEmpty() || email.isEmpty()) {
+        if (fullname.isEmpty() || phone.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Lỗi");
             alert.setHeaderText(null);
-            alert.setContentText("Vui lòng nhập đầy đủ họ tên, số điện thoại và email.");
+            alert.setContentText("Vui lòng nhập đầy đủ họ tên, số điện thoại.");
             alert.showAndWait();
             return;
         }

@@ -30,6 +30,7 @@ public class User_MainController {
                 case "customer01" -> customerID = 1;
                 case "customer02" -> customerID = 2;
                 case "customer03" -> customerID = 3;
+                case "customer04" -> customerID = 4;
                 default -> customerID = 1;
             }
             String query = "SELECT fullname FROM customer WHERE customer_id = ?";

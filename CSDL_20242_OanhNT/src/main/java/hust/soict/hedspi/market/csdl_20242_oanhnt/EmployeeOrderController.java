@@ -69,7 +69,7 @@ public class EmployeeOrderController implements Initializable {
                             "  e.firstname || ' ' || e.lastname AS emp_name " +
                             "FROM orders o " +
                             "  JOIN customer c ON o.customer_id = c.customer_id " +
-                            "  JOIN employee e ON o.employee_id = e.employee_id";
+                            "  JOIN employee e ON o.employee_id = e.employee_id order by o.order_id desc";
 
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();

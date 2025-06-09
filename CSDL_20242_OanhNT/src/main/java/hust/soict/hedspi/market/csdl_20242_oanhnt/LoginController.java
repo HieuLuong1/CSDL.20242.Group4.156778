@@ -38,6 +38,8 @@ public class LoginController {
         accountRole.put("customer02", "customer");
         accountPassword.put("customer03", "123456");
         accountRole.put("customer03", "customer");
+        accountPassword.put("customer04", "123456");
+        accountRole.put("customer04", "customer");
 
         accountPassword.put("employee01", "abc123");
         accountRole.put("employee01", "employee");
@@ -45,6 +47,8 @@ public class LoginController {
         accountRole.put("employee02", "employee");
         accountPassword.put("employee03", "abc123");
         accountRole.put("employee03", "employee");
+        accountPassword.put("employee04", "abc123");
+        accountRole.put("employee04", "employee");
 
         accountPassword.put("admin01", "admin123");
         accountRole.put("admin01", "admin");

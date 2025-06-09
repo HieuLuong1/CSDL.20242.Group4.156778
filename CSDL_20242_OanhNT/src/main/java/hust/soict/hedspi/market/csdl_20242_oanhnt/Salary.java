@@ -31,6 +31,23 @@ public class Salary {
         updateActualSalary();
     }
 
+    public Salary(String employeeId, int salaryId, int year, int month,
+                  int basicSalary, int workdays, int bonus, int rewardPunish,
+                  int leavePay, String note, int actualSalary) {
+        this.employeeId = employeeId;
+        this.salaryId = salaryId;
+        this.year = year;
+        this.month = month;
+        this.basicSalary = basicSalary;
+        this.workdays = workdays;
+        this.bonus = bonus;
+        this.rewardPunish = rewardPunish;
+        this.leavePay = leavePay;
+        this.note = note;
+        this.actualSalary = actualSalary;
+
+    }
+
     public void updateActualSalary() {
         // Tính lương thực nhận: công thức ví dụ
         this.actualSalary = (int)(basicSalary * workdays / 26.0 + bonus + rewardPunish - leavePay);
