@@ -301,10 +301,10 @@ public class EmployeeNewOrderController {
 
             // Insert invoice details and update batch quantities
             String insertDetailSQL = "INSERT INTO order_details(order_id, batch_id, quantity) VALUES (?, ?, ?)";
-            String updateBatchSQL = "UPDATE batch SET quantity_in_stock = quantity_in_stock - ? WHERE batch_id = ?";
+            //String updateBatchSQL = "UPDATE batch SET quantity_in_stock = quantity_in_stock - ? WHERE batch_id = ?";
 
-            try (PreparedStatement psDetail = conn.prepareStatement(insertDetailSQL);
-                 PreparedStatement psBatchUpdate = conn.prepareStatement(updateBatchSQL)) {
+            try (PreparedStatement psDetail = conn.prepareStatement(insertDetailSQL)){
+                 //PreparedStatement psBatchUpdate = conn.prepareStatement(updateBatchSQL)) {
 
                 for (InvoiceItem item : orderItems) {
                     psDetail.setInt(1, Integer.parseInt(orderId));
@@ -313,10 +313,11 @@ public class EmployeeNewOrderController {
 
                     psDetail.executeUpdate();
 
-                    psBatchUpdate.setInt(1, item.getQuantity());
-                    psBatchUpdate.setInt(2, item.getBatchId());
-                    psBatchUpdate.executeUpdate();
+                    //psBatchUpdate.setInt(1, item.getQuantity());
+                    //psBatchUpdate.setInt(2, item.getBatchId());
+                    //psBatchUpdate.executeUpdate();
                 }
+
             }
 
             conn.commit();

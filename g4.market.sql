@@ -519,3 +519,4 @@ insert into check_details values
 (2, 25, 100),
 (2, 26, 100), 
 (2, 27, 100);
+
