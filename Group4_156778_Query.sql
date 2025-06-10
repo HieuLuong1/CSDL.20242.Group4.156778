@@ -61,17 +61,24 @@ create or replace view categories_number as
 	group by category_id, category_name 
 	order by soluong desc;
 
---6. Cho biết nhân viên chăm chỉ nhất siêu thị vào tháng 5/2025 để quản lí tặng thưởng. Nhân viên chăm chỉ là nhân viên đi làm 
---không nghỉ buổi nào, không muộn buổi nào, không phép buổi nào.
+--6. Cho biết nhân viên chăm chỉ nhất siêu thị vào tháng 5/2025 để quản lí tặng thưởng. Nhân viên chăm chỉ là nhân viên đi làm đủ từ 25 buổi/ tháng
+--nhưng không được Vắng (nghỉ không phép) buổi nào. 
 with temp as(
 	select employee_id, count(*) as dilam 
 	from working 
 	where status = 'D' and (work_date between '2025/05/01' and '2025/05/31')
+	group by employee_id
+	having count(*) >= 25),
+temp_absent as(
+	select employee_id, count(*) as vang 
+	from working 
+	where status = 'V' and (work_date between '2025/05/01' and '2025/05/31')
 	group by employee_id)
 select employee_id, concat(lastname, ' ', firstname) as fullname, dilam 
 from employee 
 join temp using (employee_id)
-where dilam = (select max(dilam) from temp);
+left join temp_absent using (employee_id)
+where dilam = (select max(dilam) from temp) and vang is null;
 
 --câu này có thể cải thiện hiệu năng câu lệnh truy vấn bằng cách đặt index trên 2 điều kiện ở phép where trong bảng tạm. Vấn đề cần thiết ở đây là 
 --nên đặt index theo 2 cột (status, work_date) hay (work_date, status) hay 2 index trên 2 cột đơn lẻ status với workdate.
@@ -80,23 +87,12 @@ where dilam = (select max(dilam) from temp);
 create index idx_working_date on working using btree (work_date);
 --create index idx_working_status on working using btree (status);
 
-with temp as(
-	select employee_id, count(*) as dilam 
-	from working 
-	where (work_date between '2025/05/01' and '2025/05/31') and status = 'D'
-	group by employee_id)
-select employee_id, concat(lastname, ' ', firstname) as fullname, dilam 
-from employee 
-join temp using (employee_id)
-where dilam = (select max(dilam) from temp);
-
 --nhận xét do cột status ít dữ liệu khác nhau ('D', 'M', 'V', 'P') nên thứ tự bị lặp lại nhiều, có nhiều khả năng đặt index ở đây sẽ không hiệu quả 
 --do hệ thống sẽ lựa chọn cách duyệt toàn bộ thay vì sắp xếp nhiều bản ghi giống hệt nhau trên cột status rồi mới lọc ra. => index trên status ko hiệu quae.
---Index trên work_date theo em đáp ứng đc nhất trong trường hợp này, nó sẽ giúp lọc ra khoảng ngày tháng năm thỏa mãn rồi sau đó lấy ra các bản ghi có status phù hợp.
+--Index trên work_date theo em đáp ứng được nhất trong trường hợp này, nó sẽ giúp lọc ra khoảng ngày tháng năm thỏa mãn rồi sau đó lấy ra các bản ghi có status phù hợp.
 --Đối với index đôi tùy vào 2 cách viết truy vấn thì thứ tự trong where có sự thay đổi => dẫn đến nếu viết theo cách 1 thì index (status, work_date) thực hiện đc,
---còn index (work_date, status) lại ko đc, cách 2 thì ngược lại. => có thể nhanh trong 1 số trường hợp, nhưng lại thiếu tính linh hoạt, bắt buộc theo thứ tự.
---ngoài ra việc đặt 1 index 2 cột ở đây cũng khá tốn kém chi phí, trừ trường hợp cần truy vấn việc này nhiều lần, còn nếu muốn tìm người nghỉ nhiều 
---nhất, muộn nhiều nhất thì lại phải cần thêm các index khác ... => gây tốn kém bảo trì, trong khi việc lặp theo ngày đã cực hiệu quả rồi (do status bị lặp lại dữ liệu nhiều).
+--còn index (work_date, status) lại ko được, cách 2 thì ngược lại. => có thể nhanh trong 1 số trường hợp, nhưng lại thiếu tính linh hoạt, bắt buộc theo thứ tự.
+--ngoài ra việc đặt 1 index 2 cột ở đây cũng khá tốn kém chi phí, trừ trường hợp cần truy vấn việc này nhiều lần, ... => gây tốn kém bảo trì, trong khi việc lặp theo ngày đã cực hiệu quả rồi (do status bị lặp lại dữ liệu nhiều).
 
 
 --7. Viết hàm trả về các đơn hàng mà khách hàng đã mua với đầu vào là số điện thoại của khách, kết quả trả về là mã hóa đơn, ngày mua hàng,
@@ -124,16 +120,18 @@ where supplier_name = 'Cong ty TNHH Sao Mai';
 --có thể đặt index trên supplier_name để truy vấn hiệu quả hơn.
 create index idx_suppliers_name on suppliers using btree (supplier_name);
 
---9. Đưa ra thông tin các lô hàng được kiểm kê số lượng vào ngày 5/5/2025. Lưu ý khi đưa ra màn hình cần cho biết mã lô, số lượng lưu trên hệ thống
---với số lượng thực tế mà quản lí ghi vào. 
-select batch_id, quantity_in_stock, real_quantity 
-from batch 
-join check_details using (batch_id) 
-join check_reports using (report_id) 
-where check_date = '2025/05/05';
-
---có thể đặt index trên cột check_date.
-create index idx_check_date on check_reports using btree (check_date);
+--9. Viết 1 hàm có đầu vào là mã nhân viên, ngày đi làm và trả về số đơn mà nhân viên đó đã thực hiện trong ngày hôm đó. 
+create or replace function total_order (in v_employeeid int, v_date date) returns integer as 
+$$
+declare v_count integer;
+begin 
+	select into v_count count(order_id)
+	from orders 
+	where employee_id = v_employeeid and order_date = v_date;
+	return v_count;
+end;
+$$ language plpgsql;
+select total_order(1, '2025/06/09');
 
 --10. Cho biết khách hàng nào mua nhiều đơn nhất từ trước đến giờ.
 with temp as(
