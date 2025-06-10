@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="200.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.Employee_SalaryController">
+   <center>
+      <TableView fx:id="tableView" prefHeight="200.0" prefWidth="0.0" BorderPane.alignment="CENTER">
+        <columns>
+          <TableColumn fx:id="colID" prefWidth="75.0" text="Mã NV" />
+          <TableColumn fx:id="colSalary" prefWidth="75.0" text="Mã lương" />
+            <TableColumn fx:id="colBasicSalary" prefWidth="96.6666259765625" text="Lương cơ bản" />
+            <TableColumn fx:id="colBonus" prefWidth="75.0" text="Phụ cấp" />
+            <TableColumn fx:id="colWorkdate" prefWidth="75.0" text="Ngày công" />
+            <TableColumn fx:id="colRewardPunish" text="Thưởng phạt" />
+            <TableColumn fx:id="colNote" prefWidth="113.99996948242188" text="Lí do" />
+            <TableColumn fx:id="colLeave" prefWidth="116.0" text="Tiền Phép" />
+            <TableColumn fx:id="colTotal" prefWidth="94.0" text="Tổng lương" />
+        </columns>
+      </TableView>
+   </center>
+</BorderPane>
