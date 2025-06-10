@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.*?>
+<?import javafx.geometry.*?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<BorderPane xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="hust.soict.hedspi.market.csdl_20242_oanhnt.Admin_InventoryReportController">
+    <center>
+        <VBox spacing="10">
+            <padding>
+                <Insets bottom="10" left="10" right="10" top="10" />
+            </padding>
+            <children>
+                <Label style="-fx-font-size: 16; -fx-font-weight: bold" text="Danh sách biên bản kiểm kê" />
+                <TableView fx:id="inventoryReportTable" prefHeight="200">
+                    <columns>
+                        <TableColumn fx:id="colReportId" text="Mã biên bản" />
+                        <TableColumn fx:id="colReportDate" text="Ngày lập" />
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                    </columnResizePolicy>
+                </TableView>
+
+                <Label style="-fx-font-size: 16; -fx-font-weight: bold" text="Chi tiết lô hàng" />
+                <TableView fx:id="batchDetailTable" prefHeight="250">
+                    <columns>
+                        <TableColumn fx:id="colBatchId" text="Mã lô" />
+                        <TableColumn fx:id="colProductName" text="Tên sản phẩm" />
+                        <TableColumn fx:id="colImportDate" text="Ngày nhập" />
+                        <TableColumn fx:id="colExpiryDate" text="Hạn sử dụng" />
+                        <TableColumn fx:id="colSystemQty" text="SL hệ thống" />
+                        <TableColumn fx:id="colActualQty" text="SL thực tế" />
+                    </columns>
+                    <columnResizePolicy>
+                        <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                    </columnResizePolicy>
+                </TableView>
+                <HBox spacing="10">
+                    <children>
+                        <Button fx:id="btnCreateInventoryReport" onAction="#handleOpenCreateInventoryReport" text="Tạo biên bản mới" />
+                    </children>
+                </HBox>
+            </children>
+        </VBox>
+    </center>
+</BorderPane>

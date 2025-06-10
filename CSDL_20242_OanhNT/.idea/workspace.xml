@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="8943412d-6e91-4167-8bd3-9258df666551" name="Changes" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="FxmlFile" />
+        <option value="Class" />
+      </list>
+    </option>
+  </component>
+  <component name="MavenImportPreferences">
+    <option name="generalSettings">
+      <MavenGeneralSettings>
+        <option name="mavenHomeTypeForPersistence" value="WRAPPER" />
+      </MavenGeneralSettings>
+    </option>
+  </component>
+  <component name="ProjectColorInfo">{
+  &quot;associatedIndex&quot;: 4
+}</component>
+  <component name="ProjectId" id="2xt1jUK0UFejEBTkA33HF1lwyY9" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.MainApp.executor&quot;: &quot;Run&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;C:/Users/ThinkPad/Downloads/postgresql-42.7.6.jar&quot;,
+    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
+    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
+    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
+    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Libraries&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;configurable.group.editor&quot;,
+    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  }
+}</component>
+  <component name="RunManager">
+    <configuration name="MainApp" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="hust.soict.hedspi.market.csdl_20242_oanhnt.MainApp" />
+      <module name="CSDL_20242_OanhNT" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="hust.soict.hedspi.market.csdl_20242_oanhnt.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Application.MainApp" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-a94e463ab2e7-intellij.indexing.shared.core-IU-243.25659.59" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-IU-243.25659.59" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="8943412d-6e91-4167-8bd3-9258df666551" name="Changes" comment="" />
+      <created>1748742693462</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1748742693462</updated>
+      <workItem from="1748742694921" duration="14315000" />
+      <workItem from="1748793909982" duration="1443000" />
+      <workItem from="1748866051636" duration="5175000" />
+      <workItem from="1748921097601" duration="76000" />
+      <workItem from="1748932074729" duration="17306000" />
+      <workItem from="1748967234692" duration="5000" />
+      <workItem from="1749000887054" duration="2363000" />
+      <workItem from="1749016843038" duration="14363000" />
+      <workItem from="1749106862266" duration="4905000" />
+      <workItem from="1749120633999" duration="1826000" />
+      <workItem from="1749129197817" duration="703000" />
+      <workItem from="1749177906716" duration="1236000" />
+      <workItem from="1749198131034" duration="5146000" />
+      <workItem from="1749221602756" duration="649000" />
+      <workItem from="1749257470952" duration="363000" />
+      <workItem from="1749280826523" duration="264000" />
+      <workItem from="1749295416690" duration="627000" />
+      <workItem from="1749300065239" duration="27000" />
+      <workItem from="1749300107217" duration="9000" />
+      <workItem from="1749300128323" duration="57000" />
+      <workItem from="1749300376010" duration="15728000" />
+      <workItem from="1749344471789" duration="24545000" />
+      <workItem from="1749392515430" duration="1817000" />
+      <workItem from="1749430923291" duration="173000" />
+      <workItem from="1749433236231" duration="2723000" />
+      <workItem from="1749444102938" duration="7799000" />
+      <workItem from="1749455692323" duration="111000" />
+      <workItem from="1749473539170" duration="5653000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="XSLT-Support.FileAssociations.UIState">
+    <expand />
+    <select />
+  </component>
+</project>
