@@ -16,6 +16,11 @@
 
     <dependencies>
         <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.7.5</version> <!-- phiên bản mới nhất tính đến 2024 -->
+    </dependency>
+        <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
             <version>17.0.6</version>
@@ -38,11 +43,6 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-        <groupId>org.postgresql</groupId>
-        <artifactId>postgresql</artifactId>
-        <version>42.7.5</version> <!-- phiên bản mới nhất tính đến 2024 -->
-    </dependency>
     </dependencies>
 
     <build>

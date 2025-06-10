@@ -69,13 +69,13 @@ public class EmployeeOrderController implements Initializable {
                             "  e.firstname || ' ' || e.lastname AS emp_name " +
                             "FROM orders o " +
                             "  JOIN customer c ON o.customer_id = c.customer_id " +
-                            "  JOIN employee e ON o.employee_id = e.employee_id";
+                            "  JOIN employee e ON o.employee_id = e.employee_id order by o.order_id desc";
 
             PreparedStatement stmt = conn.prepareStatement(sql);
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                String id = String.valueOf(rs.getInt("order_id"));
+                String id = String.format("HD%03d", rs.getInt("order_id"));
                 String date = rs.getDate("order_date").toString();
                 double total = rs.getDouble("total_amount");
                 String method = rs.getString("payment_method");

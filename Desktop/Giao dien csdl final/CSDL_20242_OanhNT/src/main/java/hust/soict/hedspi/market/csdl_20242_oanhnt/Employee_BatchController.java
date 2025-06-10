@@ -14,6 +14,8 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import javafx.scene.control.cell.TextFieldTableCell;
+import javafx.util.converter.IntegerStringConverter;
 
 public class Employee_BatchController {
     @FXML private TableView<Batch> batchTable;
@@ -21,7 +23,7 @@ public class Employee_BatchController {
     @FXML private TableColumn<Batch, LocalDate> colDate;
     @FXML private TableColumn<Batch, LocalDate> colExp;
     @FXML private TableColumn<Batch, Integer> colQuantity;
-    @FXML private TableColumn<Batch, Integer> colSale;
+    @FXML private TableColumn<Batch, Integer> colStock;
     @FXML private TableColumn<Batch, String> colProd;
     @FXML private TableColumn<Batch, String> colSupplier;
     @FXML private TextField searchField;
@@ -35,9 +37,18 @@ public class Employee_BatchController {
         colDate.setCellValueFactory(new PropertyValueFactory<>("importDate"));
         colExp.setCellValueFactory(new PropertyValueFactory<>("expiryDate"));
         colQuantity.setCellValueFactory(new PropertyValueFactory<>("totalQuantity"));
-        colSale.setCellValueFactory(new PropertyValueFactory<>("soldQuantity"));
         colProd.setCellValueFactory(new PropertyValueFactory<>("productName"));
         colSupplier.setCellValueFactory(new PropertyValueFactory<>("supplier"));
+        colStock.setCellValueFactory(new PropertyValueFactory<>("quantityInStock"));
+colStock.setCellFactory(TextFieldTableCell.forTableColumn(new IntegerStringConverter()));
+colStock.setOnEditCommit(event -> {
+    Batch batch = event.getRowValue();
+    int newStock = event.getNewValue();
+    batch.setQuantityInStock(newStock);
+    updateStockInDatabase(batch.getBatchId(), newStock);
+    batchTable.refresh(); 
+});
+batchTable.setEditable(true);
 
         loadBatchDataFromDB();
 
@@ -56,7 +67,7 @@ public class Employee_BatchController {
                             "  b.import_date, " +
                             "  b.expiration_date, " +
                             "  b.total_quantity, " +
-                            "  (b.total_quantity - b.quantity_in_stock) AS sold_quantity, " +
+                            "  b.quantity_in_stock, " +
                             "  p.product_name, " +
                             "  s.supplier_name, " +
                             "  b.value_batch " +
@@ -76,12 +87,12 @@ public class Employee_BatchController {
                 LocalDate expDate = (expRaw != null) ? expRaw.toLocalDate() : null;
 
                 int totalQty = rs.getInt("total_quantity");
-                int soldQty = rs.getInt("sold_quantity");
+                int inStock = rs.getInt("quantity_in_stock");
                 String productName = rs.getString("product_name");
                 String supplier = rs.getString("supplier_name");
                 int value = rs.getInt("value_batch");
 
-                batchList.add(new Batch(batchId, importDate, expDate, totalQty, soldQty, productName, supplier, value));
+                batchList.add(new Batch(batchId, importDate, expDate, totalQty, inStock, productName, supplier, value));
             }
             rs.close();
             stmt.close();
@@ -114,4 +125,16 @@ public class Employee_BatchController {
         }
         batchTable.setItems(filteredList);
     }
+    private void updateStockInDatabase(int batchId, int newStock) {
+    try (Connection conn = DatabaseConnection.getConnection()) {
+        String sql = "UPDATE batch SET quantity_in_stock = ? WHERE batch_id = ?";
+        PreparedStatement stmt = conn.prepareStatement(sql);
+        stmt.setInt(1, newStock);
+        stmt.setInt(2, batchId);
+        stmt.executeUpdate();
+        stmt.close();
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
+}
 }

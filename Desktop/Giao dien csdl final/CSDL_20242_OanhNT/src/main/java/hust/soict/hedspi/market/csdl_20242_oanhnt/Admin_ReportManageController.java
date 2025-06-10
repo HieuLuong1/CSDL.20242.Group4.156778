@@ -98,7 +98,7 @@ public class Admin_ReportManageController {
                     }
                 }
                 if (batch != null) {
-                    String code = String.valueOf(id);
+                    String code = "RP" + String.format("%03d", id);
                     reportList.add(new Report(code, date, desc, batch));
                 }
             }

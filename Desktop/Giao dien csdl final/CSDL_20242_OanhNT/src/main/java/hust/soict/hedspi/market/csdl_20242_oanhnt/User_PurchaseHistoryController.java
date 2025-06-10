@@ -98,7 +98,7 @@ public class User_PurchaseHistoryController {
                     invoiceMap.get(id)
             ));
         }
-        list.sort(Comparator.comparing(Invoice::getDate).reversed());
+
         invoiceTable.setItems(FXCollections.observableArrayList(list));
     }
 }

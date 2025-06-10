@@ -183,7 +183,7 @@ public class Admin_AddImportController {
             conn.commit();
 
             // 4. Add to observable list
-            String importCode = String.valueOf(importId);
+            String importCode = String.format("IMP%03d", importId);
             ImportOrder order = new ImportOrder(importCode, date, address, totalValue, batchNames, supplierName);
             importOrderList.add(order);
 

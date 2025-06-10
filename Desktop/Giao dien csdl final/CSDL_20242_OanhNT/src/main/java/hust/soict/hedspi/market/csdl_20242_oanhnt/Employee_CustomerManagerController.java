@@ -83,11 +83,11 @@ public class Employee_CustomerManagerController {
 
             while (rs.next()) {
                 int idInt = rs.getInt("customer_id");
-                String strId = String.valueOf(idInt);
+                String strId = "KH" + String.format("%03d", idInt);
                 String fullname = rs.getString("fullname");
                 String phone    = rs.getString("phone");
                 String email    = rs.getString("email");
-                Customer c = new Customer(strId, fullname, email, phone);
+                Customer c = new Customer(strId, fullname, phone, email);
                 customerList.add(c);
             }
             customerTable.setItems(customerList);
@@ -112,11 +112,11 @@ public class Employee_CustomerManagerController {
         String phone    = customerPhoneField.getText().trim();
         String email    = customerEmailField.getText().trim();
 
-        if (fullname.isEmpty() || phone.isEmpty() || email.isEmpty()) {
+        if (fullname.isEmpty() || phone.isEmpty()) {
             Alert alert = new Alert(Alert.AlertType.ERROR);
             alert.setTitle("Lỗi");
             alert.setHeaderText(null);
-            alert.setContentText("Vui lòng nhập đầy đủ họ tên, số điện thoại và email.");
+            alert.setContentText("Vui lòng nhập đầy đủ họ tên, số điện thoại.");
             alert.showAndWait();
             return;
         }

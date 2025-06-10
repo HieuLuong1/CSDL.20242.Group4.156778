@@ -61,7 +61,7 @@ public class Admin_ImportController {
              ResultSet rsImport = psImport.executeQuery()) {
 
             while (rsImport.next()) {
-                String importId = String.valueOf(rsImport.getInt("import_id"));
+                String importId = String.format("IMP%03d", rsImport.getInt("import_id"));
                 LocalDate importDate = rsImport.getDate("import_date").toLocalDate();
                 String address = rsImport.getString("delivery_address");
                 double totalValue = rsImport.getDouble("total_amount");

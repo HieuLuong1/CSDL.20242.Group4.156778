@@ -4,8 +4,12 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.stage.Stage;
 
 import java.net.URL;
 import java.sql.Connection;
@@ -32,6 +36,9 @@ public class Employee_ScheduleController implements Initializable {
 
     @FXML private ComboBox<String> monthCombo;
     @FXML private ComboBox<String> yearCombo;
+    @FXML private Button btnSalary;
+    @FXML private Button btnShowDetail;
+    @FXML private Button btnViewSchedule;
 
     private final ObservableList<WorkScheduleRecord> allRecords = FXCollections.observableArrayList();
     private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
@@ -179,8 +186,28 @@ public class Employee_ScheduleController implements Initializable {
         scheduleTable.setVisible(!scheduleTable.isVisible());
     }
 
+
     @FXML
     private void handleViewSchedule() {
         updateView();
+    }
+    @FXML
+    private void handleWatchSalary(){
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("Employee_Salary.fxml"));
+            Parent root = loader.load();
+            Employee_SalaryController salaryController = loader.getController();
+            // Truyền employeeId sang màn hình bảng lương
+            salaryController.setEmployeeId(String.valueOf(employeeId));
+            int month = Integer.parseInt(monthCombo.getValue());
+            int year = Integer.parseInt(yearCombo.getValue());
+            salaryController.setFilterMonthYear(month, year);
+            Stage stage = new Stage();
+            stage.setScene(new Scene(root));
+            stage.setTitle("Bảng lương của bạn");
+            stage.show();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

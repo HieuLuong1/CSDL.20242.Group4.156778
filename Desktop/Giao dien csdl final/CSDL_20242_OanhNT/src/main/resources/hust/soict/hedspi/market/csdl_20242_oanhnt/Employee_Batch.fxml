@@ -41,7 +41,7 @@
           <TableColumn fx:id="colDate" prefWidth="75.0" text="Ngày nhập" />
             <TableColumn fx:id="colExp" prefWidth="88.66668701171875" text="HSD" />
             <TableColumn fx:id="colQuantity" prefWidth="96.6666259765625" text="Tổng số lượng" />
-            <TableColumn fx:id="colSale" prefWidth="91.3333740234375" text="Đã bán" />
+            <TableColumn fx:id="colStock" prefWidth="91.3333740234375" text="Số lượng tồn kho" />
             <TableColumn fx:id="colProd" prefWidth="78.0" text="Sản phẩm" />
             <TableColumn fx:id="colSupplier" prefWidth="94.66668701171875" text="Nhà cung cấp" />
         </columns>

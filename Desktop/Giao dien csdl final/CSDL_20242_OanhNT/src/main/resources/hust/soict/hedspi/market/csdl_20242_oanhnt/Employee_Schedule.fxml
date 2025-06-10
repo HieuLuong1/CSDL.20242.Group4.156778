@@ -22,7 +22,8 @@
                     <Label text="Năm:" />
                     <ComboBox fx:id="yearCombo" prefWidth="100" />
 
-                    <Button onAction="#handleViewSchedule" text="Xem lịch" />
+                    <Button fx:id="btnViewSchedule" onAction="#handleViewSchedule" text="Xem lịch" />
+               <Button fx:id="btnSalary" mnemonicParsing="false" onAction="#handleWatchSalary" text="Bảng lương " />
                 </HBox>
 
                 <!-- Tiêu đề -->

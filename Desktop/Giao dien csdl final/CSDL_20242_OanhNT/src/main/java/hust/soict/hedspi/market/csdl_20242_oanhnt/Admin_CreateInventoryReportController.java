@@ -89,7 +89,7 @@ public class Admin_CreateInventoryReportController {
                         rs.getInt("batch_id"),
                         rs.getDate("import_date").toLocalDate(),
                         rs.getDate("expiration_date").toLocalDate(),
-                        rs.getInt("total_quantity"),
+                        rs.getInt("quantity_in_stock"),
                         rs.getInt("quantity_in_stock"),
                         rs.getString("product_name"),
                         rs.getString("supplier_name"),
