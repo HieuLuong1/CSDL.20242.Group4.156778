@@ -35,9 +35,24 @@ with temp as(
 select product_id, product_name, banra 
 from temp 
 where banra = (select max(banra) from temp);
+
+with temp as(
+	select product_id, product_name, sum(quantity) as banra 
+	from orders
+	join order_details using (order_id)
+	join batch using (batch_id) 
+	join products using (product_id)
+	where order_date between '2025/06/01' and '2025/06/30'
+	group by product_id, product_name)
+select product_id, product_name, banra 
+from temp 
+where banra >= all(select banra from temp);
 --sử dụng 1 bảng temp để đưa ra các sản phẩm và số lượng được bán ra của chúng.
 --có thể tạo chỉ mục trên order_date (đã tạo) để tăng tốc độ.
 create index idx_orders_date on orders using btree (order_date);
+--Ở 2 cách trên, cách số 1 sẽ nhanh hơn do đặt phép toán bằng và 1 truy vấn tìm max con bên trong, do đó hệ thống chỉ cần tính 1 lần ra giá trị max,
+--sau đó nó sẽ chỉ làm việc trên bảng chính theo quy tắc đường ống. Còn ở cách số 2 nó sẽ liên quan đến bộ nhớ, tức là cứ duyệt 1 bản ghi lại so sánh 
+--với mọi bản ghi của truy vấn con, sau đó nó mới ghi vào bộ nhớ xem giá trị mới có vượt giá trị max hay không.
 
 --4. Chi tiết đơn hàng có order_id = 1 biết 1 đơn hàng cần bao gồm mã sản phẩm, tên sản phẩm, số lượng bán ra, giá cả mỗi SP, thành tiên mỗi SP 
 select product_id, product_name, quantity, price_with_tax, (quantity * price_with_tax) as thanhtien 
@@ -119,6 +134,14 @@ where supplier_name = 'Cong ty TNHH Sao Mai';
 
 --có thể đặt index trên supplier_name để truy vấn hiệu quả hơn.
 create index idx_suppliers_name on suppliers using btree (supplier_name);
+--Tuy nhiên trên thực tế người ta chỉ lưu đầy đủ chứ tìm kiếm thì hiếm khi. Thường khi tìm tên công ty người ta chỉ tìm Sao Mai, hoặc cùng lắm là 
+--Công ty Sao Mai, do đó dòng where trên thực tế sẽ có dạng là (tùy vào tên của công ty nữa).
+where supplier_name like 'Sao Mai%';
+where supplier_name like '%Sao Mai';
+where supplier_name like '%Sao Mai%';
+--Như vậy trong 3 cách trên thì có đến 2 cách thường xuyên được dùng nhưng lại cấm index btree (%name), do đó ở đây việc đặt index sẽ không tối ưu
+--về việc sử dụng lắm.
+
 
 --9. Viết 1 hàm có đầu vào là mã nhân viên, ngày đi làm và trả về số đơn mà nhân viên đó đã thực hiện trong ngày hôm đó. 
 create or replace function total_order (in v_employeeid int, v_date date) returns integer as 
