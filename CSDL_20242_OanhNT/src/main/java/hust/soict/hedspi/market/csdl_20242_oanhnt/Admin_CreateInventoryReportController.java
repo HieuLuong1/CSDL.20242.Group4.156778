@@ -143,12 +143,13 @@ public class Admin_CreateInventoryReportController {
             }
 
             // 2. Insert chi tiết từng batch vào bảng check_details
-            String insertDetailSQL = "INSERT INTO check_details (report_id, batch_id, real_quantity) VALUES (?, ?, ?)";
+            String insertDetailSQL = "INSERT INTO check_details (report_id, batch_id, real_quantity, quantity_in_stock) VALUES (?, ?, ?, ?)";
             try (PreparedStatement psDetail = conn.prepareStatement(insertDetailSQL)) {
                 for (BatchWrapper bw : selectedWrappers) {
                     psDetail.setInt(1, generatedReportId);
                     psDetail.setInt(2, bw.getBatch().getBatchId());
                     psDetail.setInt(3, bw.getActualQuantity());
+                    psDetail.setInt(4, bw.getBatch().getQuantityInStock());
                     psDetail.addBatch();
                 }
                 psDetail.executeBatch();

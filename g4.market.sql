@@ -400,6 +400,9 @@ insert into batch (import_date, expiration_date, total_quantity, quantity_in_sto
 alter table schedule 
 drop column month;
 
+alter table check_details 
+add column quantity_in_stock int;
+
 insert into working (employee_id, schedule_id, work_date, status) values 
 (3, 4, '2025/05/01', 'D'),
 (3, 4, '2025/05/02', 'D'),
@@ -582,4 +585,6 @@ create trigger tg_after_insert_order_details
 after insert on order_details 
 for each row 
 execute procedure tf_after_insert_order_details();
+
+
 

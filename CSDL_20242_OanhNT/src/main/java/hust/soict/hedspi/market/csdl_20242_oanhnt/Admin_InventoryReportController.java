@@ -68,7 +68,7 @@ public class Admin_InventoryReportController {
         String reportQuery = "SELECT * FROM check_reports";
         String detailQuery = """
                 SELECT cd.batch_id, cd.real_quantity, b.import_date, b.expiration_date, 
-                       b.total_quantity, p.product_name, b.quantity_in_stock
+                       b.total_quantity, p.product_name, cd.quantity_in_stock
                 FROM check_details cd
                 JOIN batch b ON cd.batch_id = b.batch_id
                 JOIN products p ON b.product_id = p.product_id
