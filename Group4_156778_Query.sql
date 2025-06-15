@@ -1,29 +1,43 @@
 --Lương Quý Hiếu 20235711 
 --1. Cho biết các đơn hàng và số tiền của đơn hàng nhận được trong ngày 5/6/2025:
-select order_id, total_amount 
+select sum(total_amount) 
 from orders 
 where order_date = '2025/06/05';
---câu lệnh có thể sử dụng index để tối ưu do phép toán = thỏa mãn điều kiện tìm kiếm của index btree. Nó sẽ sắp xếp dữ liệu theo 1 trình tự rồi lấy ra 
---các kết quả orderdate thỏa mãn.
+--Có thể sử dụng index B-Tree trong trường hợp này và nên sử dụng index trên bảng orders, trên cột order_date. Lí do: Phép toán = thỏa mãn điều kiện sử dụng của index, bảng orders là bảng nhiều dữ liệu cần quản lí, lại được người dùng thường xuyên truy vấn nên hoàn toàn hợp lí. Câu lệnh tạo index:
 create index idx_orders_date on orders using btree (order_date);
+--Khi đã có index theo ngày, nó sẽ giúp lọc ra nhanh chóng theo điểm các hóa đơn thỏa mãn.
+
 
 --2. Cho biết các khách hàng đã mua hàng ở cửa hàng vào ngày 5/6/2025. Thông tin in ra gồm mã khách hàng, họ tên đầy đủ của khách hàng đó.
 --Lưu ý nếu khách hàng mua từ 2 lần trên 1 ngày cũng chỉ hiện thông tin 1 lần.
+--Cách 1:
 select distinct customer_id, fullname 
 from customer 
 where customer_id in (select customer_id from orders where order_date = '2025/06/05');
---câu lệnh có thể viết theo nhiều cách 
+--Cách 2:
 select distinct customer_id, fullname 
 from customer 
 join orders using (customer_id) 
 where order_date = '2025/06/05';
---có thể sử dụng chỉ mục trên cột order_date do phép toán = giúp index sắp xếp dữ liệu, thực thi tìm ra nhanh các dòng có giá trị là 2025/06/05 
+--Như đã biết, việc tạo 1 index theo order_date trên bảng orders là hoàn toàn hợp lí và nên làm, do nó thỏa mãn cả về điều kiện kích hoạt index theo giá trị cụ thể, giúp lọc ra những bản ghi phù hợp nhanh chóng. Câu lệnh tạo index tương tự câu 1:
 create index idx_orders_date on orders using btree (order_date);
---Ở 2 cách viết trên thì cách số 1 dùng truy vấn con, nó sẽ lọc ra các bản ghi customerid thỏa mãn, sau đó sẽ group theo các giá trị trùng nhau 
---rồi mới so sánh với các bản ghi customerid ở câu truy vấn chính. Cách số 2 thì nó lọc ra các bản ghi theo orderid thỏa mãn, rồi kết nối với 
---bảng customer để trả ra kết quả. 2 cách đều có thể dùng index tuy nhiên cách số 2 nhanh hơn cách 1 do máy ko cần lọc để loại truy trong truy vấn con.
+--Tuy nhiên, ở 2 cách viết trên thì cách số 1 dùng truy vấn con, nó sẽ lọc ra các bản ghi customerid thỏa mãn, sau đó sẽ có thêm 1 bước gom nhóm theo các giá trị trùng nhau rồi mới so sánh với các bản ghi customer_id ở câu truy vấn chính, còn cách số 2 thì bộ xử lí câu hỏi sẽ dùng index lọc trên bảng orders trước theo điều kiện phép chọn, rồi mới thực hiện phép join với bảng orders với các giá trị customer_id thỏa mãn. Cả 2 cách đều có thể dùng index tuy nhiên cách số 2 nhanh hơn cách 1 do máy giảm được 1 bước gom nhóm các kết quả trùng trả về trong in.
 
 --3. Đưa ra sản phẩm được bán nhiều nhất trong tháng 6/2025.
+--Cách 1:
+select distinct customer_id, fullname 
+from customer 
+where customer_id in (select customer_id from orders where order_date = '2025/06/05');
+--Cách 2:
+select distinct customer_id, fullname 
+from customer 
+join orders using (customer_id) 
+where order_date = '2025/06/05';
+--Như đã biết, việc tạo 1 index theo order_date trên bảng orders là hoàn toàn hợp lí và nên làm, do nó thỏa mãn cả về điều kiện kích hoạt index theo giá trị cụ thể, giúp lọc ra những bản ghi phù hợp nhanh chóng. Câu lệnh tạo index tương tự câu 1:
+create index idx_orders_date on orders using btree (order_date);
+--Tuy nhiên, ở 2 cách viết trên thì cách số 1 dùng truy vấn con, nó sẽ lọc ra các bản ghi customerid thỏa mãn, sau đó sẽ có thêm 1 bước gom nhóm theo các giá trị trùng nhau rồi mới so sánh với các bản ghi customer_id ở câu truy vấn chính, còn cách số 2 thì bộ xử lí câu hỏi sẽ dùng index lọc trên bảng orders trước theo điều kiện phép chọn, rồi mới thực hiện phép join với bảng orders với các giá trị customer_id thỏa mãn. Cả 2 cách đều có thể dùng index tuy nhiên cách số 2 nhanh hơn cách 1 do máy giảm được 1 bước gom nhóm các kết quả trùng trả về trong in.
+--3. Đưa ra sản phẩm được bán nhiều nhất trong tháng 6/2025.
+--Cách 1:
 with temp as(
 	select product_id, product_name, sum(quantity) as banra 
 	from orders
@@ -35,7 +49,7 @@ with temp as(
 select product_id, product_name, banra 
 from temp 
 where banra = (select max(banra) from temp);
-
+--Cách 2:
 with temp as(
 	select product_id, product_name, sum(quantity) as banra 
 	from orders
@@ -47,27 +61,16 @@ with temp as(
 select product_id, product_name, banra 
 from temp 
 where banra >= all(select banra from temp);
---sử dụng 1 bảng temp để đưa ra các sản phẩm và số lượng được bán ra của chúng.
---có thể tạo chỉ mục trên order_date (đã tạo) để tăng tốc độ.
+--Đối với câu hỏi này, ta nhận xét bảng orders vốn là bảng có nhiều dữ liệu, cột order_date được khởi tạo không được phép thay đổi, rõ ràng đặt index B-Tree trên cột order_date của bảng orders là vẫn hợp lí do nó đánh dấu trên khoảng >= và <= để tận dụng tối ưu sức mạnh của index. Cách đánh chỉ mục: 
 create index idx_orders_date on orders using btree (order_date);
---Ở 2 cách trên, cách số 1 sẽ nhanh hơn do đặt phép toán bằng và 1 truy vấn tìm max con bên trong, do đó hệ thống chỉ cần tính 1 lần ra giá trị max,
---sau đó nó sẽ chỉ làm việc trên bảng chính theo quy tắc đường ống. Còn ở cách số 2 nó sẽ liên quan đến bộ nhớ, tức là cứ duyệt 1 bản ghi lại so sánh 
---với mọi bản ghi của truy vấn con, sau đó nó mới ghi vào bộ nhớ xem giá trị mới có vượt giá trị max hay không.
+--Đối với 2 cách ở trên, cách số 1 theo thời gian lâu dài sẽ hiệu quả hơn cách số 2. Lí do nằm ở chỗ, cách số 1 sử dụng câu lệnh tính max chỉ 1 lần, rồi câu lệnh chính sẽ thực hiện so sánh xem bản ghi nào có giá trị bằng với max như các phép toán chọn thông thường theo quy tắc lưu trữ dạng đường ống. Còn ở cách số 2, mỗi lần đọc 1 bản ghi ở câu lệnh chính, banra sẽ phải duyệt qua với mọi giá trị banra ở bảng temp xem có thỏa mãn không mới in ra, nếu càng nhiều sản phẩm thì mỗi lần so sánh vậy sẽ rất chậm (theo quy tắc dạng vật chất hóa => liên quan đến bộ nhớ ở phần cứng => chậm hơn là chắc chắn).
 
---4. Chi tiết đơn hàng có order_id = 1 biết 1 đơn hàng cần bao gồm mã sản phẩm, tên sản phẩm, số lượng bán ra, giá cả mỗi SP, thành tiên mỗi SP 
-select product_id, product_name, quantity, price_with_tax, (quantity * price_with_tax) as thanhtien 
-from order_details 
-join batch using (batch_id)
-join products using (product_id) 
-where order_id = '1';
-
---nếu viết theo cách này, order_id = 1 sẽ được lọc ra đầu tiên để giảm kích cỡ của bảng sau đó sẽ thực hiện join.
---Mặc dù đã có sẵn index khóa chính orderid với batch_id, nhưng hệ thống không lựa chọn sử dụng index này do phép where chỉ có 1 điều kiện và
---sử dụng index trên 2 cột cũng không nhanh bằng phép lọc thông thường (do máy tự chọn). 
---Tuy nhiên vẫn có thể sử dụng 1 index trên 1 cột 
-create index idx_details_orderid on order_details using btree (order_id);
---thì hệ thống sẽ nhận ra chỉ có 1 điều kiện duy nhất và trùng khớp với điều kiện trên index này nên nó dùng => cải thiện truy vấn.
-
+--4. Thống kê số nhân viên mỗi ca làm trong tháng 6/2025.
+select schedule_id, start_day, end_day, start_time, end_time, count(distinct employee_id) as soluong 
+from schedule 
+join working using (schedule_id)
+where work_date between '2025/05/01' and '2025/05/30'
+group by schedule_id;
 --5. Tạo 1 khung nhìn cho biết các loại sản phẩm hiện có trong siêu thị và số lượng của mỗi loại. Sắp xếp kết quả theo thứ tự giảm dần về số lượng. 
 create or replace view categories_number as 
 	select category_id, category_name, count(product_id) as soluong 
@@ -94,20 +97,12 @@ from employee
 join temp using (employee_id)
 left join temp_absent using (employee_id)
 where dilam = (select max(dilam) from temp) and vang is null;
-
---câu này có thể cải thiện hiệu năng câu lệnh truy vấn bằng cách đặt index trên 2 điều kiện ở phép where trong bảng tạm. Vấn đề cần thiết ở đây là 
---nên đặt index theo 2 cột (status, work_date) hay (work_date, status) hay 2 index trên 2 cột đơn lẻ status với workdate.
+--Câu này có thể cải thiện hiệu năng câu lệnh truy vấn bằng cách đặt index trên 2 điều kiện ở phép where trong bảng tạm. Vấn đề cần thiết ở đây là nên đặt index composite theo 2 cột (status, work_date) hay (work_date, status) hay 2 index trên 2 cột đơn lẻ status với workdate.
 --create index idx_working_status_date on working using btree (status, work_date);
 --create index idx_date_status on working using btree (work_date, status);
 create index idx_working_date on working using btree (work_date);
 --create index idx_working_status on working using btree (status);
-
---nhận xét do cột status ít dữ liệu khác nhau ('D', 'M', 'V', 'P') nên thứ tự bị lặp lại nhiều, có nhiều khả năng đặt index ở đây sẽ không hiệu quả 
---do hệ thống sẽ lựa chọn cách duyệt toàn bộ thay vì sắp xếp nhiều bản ghi giống hệt nhau trên cột status rồi mới lọc ra. => index trên status ko hiệu quae.
---Index trên work_date theo em đáp ứng được nhất trong trường hợp này, nó sẽ giúp lọc ra khoảng ngày tháng năm thỏa mãn rồi sau đó lấy ra các bản ghi có status phù hợp.
---Đối với index đôi tùy vào 2 cách viết truy vấn thì thứ tự trong where có sự thay đổi => dẫn đến nếu viết theo cách 1 thì index (status, work_date) thực hiện đc,
---còn index (work_date, status) lại ko được, cách 2 thì ngược lại. => có thể nhanh trong 1 số trường hợp, nhưng lại thiếu tính linh hoạt, bắt buộc theo thứ tự.
---ngoài ra việc đặt 1 index 2 cột ở đây cũng khá tốn kém chi phí, trừ trường hợp cần truy vấn việc này nhiều lần, ... => gây tốn kém bảo trì, trong khi việc lặp theo ngày đã cực hiệu quả rồi (do status bị lặp lại dữ liệu nhiều).
+--Nhận xét do cột status ít dữ liệu khác nhau ('D', 'M', 'V', 'P') nên thứ tự bị lặp lại nhiều, việc tạo thêm 1 vùng nhớ để lưu trữ index, nhưng index lại trỏ vào vô số các giá trị giống nhau lặp đi lặp lại gây tốn chi phí. Index trên work_date theo em đáp ứng được nhất trong trường hợp này, nó sẽ giúp lọc ra khoảng ngày tháng năm thỏa mãn (index theo ngày này còn được sử dụng nhiều trong các yêu cầu khác) rồi sau đó lấy ra các bản ghi có status phù hợp. Đối với index composite tùy vào 2 cách viết truy vấn thì thứ tự trong where có sự thay đổi => dẫn đến nếu viết theo cách 1 thì index (status, work_date) thực hiện được, còn index (work_date, status) lại ko được, cách 2 thì ngược lại. => có thể nhanh trong 1 số trường hợp, nhưng lại thiếu tính linh hoạt, bắt buộc theo thứ tự. 
 
 
 --7. Viết hàm trả về các đơn hàng mà khách hàng đã mua với đầu vào là số điện thoại của khách, kết quả trả về là mã hóa đơn, ngày mua hàng,
@@ -131,16 +126,14 @@ join batch using (product_id)
 join import_reports using (import_id)
 join suppliers using (supplier_id)
 where supplier_name = 'Cong ty TNHH Sao Mai';
-
---có thể đặt index trên supplier_name để truy vấn hiệu quả hơn.
+--Có thể đặt index trên supplier_name để truy vấn hiệu quả hơn đối với phép toán =  đối với bảng suppliers nhiều dữ liệu. Câu lệnh tạo truy vấn:
 create index idx_suppliers_name on suppliers using btree (supplier_name);
---Tuy nhiên trên thực tế người ta chỉ lưu đầy đủ chứ tìm kiếm thì hiếm khi. Thường khi tìm tên công ty người ta chỉ tìm Sao Mai, hoặc cùng lắm là 
---Công ty Sao Mai, do đó dòng where trên thực tế sẽ có dạng là (tùy vào tên của công ty nữa).
+--Tuy nhiên trên thực tế người ta chỉ lưu đầy đủ chứ tìm kiếm thì hiếm khi. Thường khi tìm tên công ty người ta chỉ tìm Sao Mai, hoặc cùng lắm là Công ty Sao Mai, do đó dòng where trên thực tế sẽ có dạng là (tùy vào tên của công ty nữa):
 where supplier_name like 'Sao Mai%';
 where supplier_name like '%Sao Mai';
 where supplier_name like '%Sao Mai%';
---Như vậy trong 3 cách trên thì có đến 2 cách thường xuyên được dùng nhưng lại cấm index btree (%name), do đó ở đây việc đặt index sẽ không tối ưu
---về việc sử dụng lắm.
+hoặc thậm chí dùng where lower(supplier_name) like ‘%sao mai%’;
+--Như vậy trong 4 cách trên thì có đến 3 cách thường xuyên được dùng nhưng lại cấm index btree (%name), do đó ở đây việc đặt index sẽ không tối ưu về việc sử dụng, mà lại mất thêm chi phí để bảo trì. Một lí do nữa để cả có cố tình lưu Sao Mai ở đầu để không cần sử dụng kiểu %name, thì việc tìm theo text (varchar) cũng cực kì không khéo léo, do máy tính sẽ cần chuyển đổi dữ liệu sang dạng bit nhị phân, vậy thì để nó quét lần lượt còn tối ưu hơn.
 
 
 --9. Viết 1 hàm có đầu vào là mã nhân viên, ngày đi làm và trả về số đơn mà nhân viên đó đã thực hiện trong ngày hôm đó. 
@@ -156,15 +149,14 @@ end;
 $$ language plpgsql;
 select total_order(1, '2025/06/09');
 
---10. Cho biết khách hàng nào mua nhiều đơn nhất từ trước đến giờ.
-with temp as(
-	select customer_id, count(order_id) as mua 
-	from orders
-	group by customer_id)
-select customer_id, fullname, mua 
-from customer 
-join temp using (customer_id) 
-where mua = (select max(mua) from temp);
+--10. Thống kê các lô hàng có thể hết HSD trong tháng 7/2025. Thông tin lô hàng gồm mã lô, tên sản phẩm, số sản phẩm còn, hạn sử dụng của lô sắp xếp theo thứ tự tăng dần.
+select batch_id, product_name, batch.quantity_in_stock, expiration_date 
+from batch 
+join products using (product_id)
+where expiration_date <= '2025/07/31'
+order by expiration_date asc;
+--Có thể và nên đặt index trên cột expiration_date của bảng batch. Lí do: index B-Tree hoàn toàn thỏa mãn điều kiện tìm khoảng giá trị <=, dữ liệu trên cột này cũng không được thay đổi và có sự đa dạng liên tục; bảng batch lại có số lượng lớn các lô hàng nhập về mỗi ngày.Đối với người sử dụng, nhất là ở vị trí quản lí, việc theo dõi các sản phẩm sắp hết HSD là rất cần thiết và thường xuyên, truy vấn sẽ được gọi nhiều lần và liên tục => đặt index là hoàn toàn chính xác.
+create index idx_batch_exp on batch using btree (expiration_date);
 --Lê Vũ Nguyên Hoàng (20235723):
 -- 1. Cho biết 5 sản phẩm có đơn giá cao nhất trong siêu thị
 SELECT product_id, product_name, unit, price_with_tax
