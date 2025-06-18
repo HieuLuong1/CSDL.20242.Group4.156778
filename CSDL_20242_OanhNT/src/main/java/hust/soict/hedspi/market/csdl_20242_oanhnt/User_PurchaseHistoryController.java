@@ -39,66 +39,69 @@ public class User_PurchaseHistoryController {
         invoiceTable.setOnMouseClicked(event -> {
             Invoice selected = invoiceTable.getSelectionModel().getSelectedItem();
             if (selected != null) {
-                invoiceDetailTable.setItems(FXCollections.observableArrayList(selected.getItems()));
+                List<InvoiceItem> items = fetchInvoiceItems(selected.getId());
+                invoiceDetailTable.setItems(FXCollections.observableArrayList(items));
                 invoiceDetailTable.setVisible(true);
             }
         });
     }
 
     public void loadInvoices() {
-        Map<String, List<InvoiceItem>> invoiceMap = new LinkedHashMap<>();
-        Map<String, String> dateMap = new HashMap<>();
-        Map<String, String> methodMap = new HashMap<>();
+        ObservableList<Invoice> invoiceList = FXCollections.observableArrayList();
 
-        String sql = """
-				    SELECT o.order_id, o.order_date, o.payment_method,
-				           p.product_name, od.quantity, p.price_with_tax
-				    FROM customer c
-				    JOIN orders o ON c.customer_id = o.customer_id
-				    JOIN order_details od ON o.order_id = od.order_id
-				    JOIN batch b ON od.batch_id = b.batch_id
-				    JOIN products p ON b.product_id = p.product_id
-				    WHERE c.customer_id = ?
-				    ORDER BY o.order_date DESC, o.order_id, p.product_name
-				""";
+        String sql = "SELECT * FROM order_bought(?)";
 
         try (Connection conn = DatabaseConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
 
-            ps.setInt(1, User_MainController.customerID);
+            ps.setString(1, User_MainController.customerPhone); // truyền số điện thoại
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                String orderId = String.valueOf(rs.getInt("orderid"));
+                String orderDate = rs.getDate("orderdate").toString();
+                String method = rs.getString("method");
+                double totalAmount = rs.getDouble("totalamount");
+
+                Invoice invoice = new Invoice(orderId, orderDate, method, totalAmount);
+                invoiceList.add(invoice);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        invoiceTable.setItems(invoiceList);
+    }
+    private List<InvoiceItem> fetchInvoiceItems(String orderId) {
+        List<InvoiceItem> list = new ArrayList<>();
+        String sql = """
+        SELECT p.product_name, od.quantity, p.price_with_tax
+        FROM order_details od
+        JOIN batch b ON od.batch_id = b.batch_id
+        JOIN products p ON b.product_id = p.product_id
+        WHERE od.order_id = ?
+        ORDER BY p.product_name
+    """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, Integer.parseInt(orderId));
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                String orderId = String.valueOf(rs.getInt("order_id"));
-                String orderDate = rs.getDate("order_date").toString();
-                String method = rs.getString("payment_method");
-
-                InvoiceItem item = new InvoiceItem(
+                list.add(new InvoiceItem(
                         rs.getString("product_name"),
                         rs.getInt("quantity"),
                         rs.getDouble("price_with_tax")
-                );
-
-                invoiceMap.putIfAbsent(orderId, new ArrayList<>());
-                invoiceMap.get(orderId).add(item);
-                dateMap.put(orderId, orderDate);
-                methodMap.put(orderId, method);
+                ));
             }
 
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        List<Invoice> list = new ArrayList<>();
-        for (String id : invoiceMap.keySet()) {
-            list.add(new Invoice(
-                    id,
-                    dateMap.get(id),
-                    methodMap.get(id),
-                    invoiceMap.get(id)
-            ));
-        }
-
-        invoiceTable.setItems(FXCollections.observableArrayList(list));
+        return list;
     }
+
 }

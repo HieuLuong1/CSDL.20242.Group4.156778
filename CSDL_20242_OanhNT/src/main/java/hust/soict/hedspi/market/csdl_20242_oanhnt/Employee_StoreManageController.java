@@ -60,13 +60,14 @@ public class Employee_StoreManageController {
 
         // Lọc tìm kiếm
         FilteredList<Item> filtered = new FilteredList<>(items, p -> true);
-        searchField.textProperty().addListener((obs, oldV, newV) -> {
-            filtered.setPredicate(item -> newV == null || newV.isEmpty() ||
-                    item.getName().toLowerCase().contains(newV.toLowerCase()));
+        searchField.textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null || newVal.trim().isEmpty()) {
+                loadProductDataFromDB();
+            } else {
+                searchProducts(newVal.trim());
+            }
         });
-        SortedList<Item> sorted = new SortedList<>(filtered);
-        sorted.comparatorProperty().bind(productTable.comparatorProperty());
-        productTable.setItems(sorted);
+        productTable.setItems(items);
 
         // Chọn dòng
         productTable.getSelectionModel().selectedItemProperty().addListener((obs, o, n) -> {
@@ -95,6 +96,42 @@ public class Employee_StoreManageController {
                         rs.getInt("quantity_in_stock"),
                         rs.getString("category_name")
 
+                ));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public void searchProducts(String keyword) {
+        items.clear();
+        String sql = """
+        SELECT DISTINCT p.product_id, p.product_name, p.unit, p.price_with_tax, 
+                        p.quantity_in_stock, c.category_name
+        FROM products p
+        JOIN batch b USING (product_id)
+        JOIN import_reports r USING (import_id)
+        JOIN suppliers s USING (supplier_id)
+        JOIN categories c ON p.category_id = c.category_id
+        WHERE LOWER(p.product_name) LIKE ? OR LOWER(s.supplier_name) LIKE ?
+        ORDER BY p.product_id ASC
+    """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            String search = "%" + keyword.toLowerCase() + "%";
+            ps.setString(1, search);
+            ps.setString(2, search);
+
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                items.add(new Item(
+                        rs.getInt("product_id"),
+                        rs.getString("product_name"),
+                        rs.getString("unit"),
+                        rs.getDouble("price_with_tax"),
+                        rs.getInt("quantity_in_stock"),
+                        rs.getString("category_name")
                 ));
             }
         } catch (Exception e) {

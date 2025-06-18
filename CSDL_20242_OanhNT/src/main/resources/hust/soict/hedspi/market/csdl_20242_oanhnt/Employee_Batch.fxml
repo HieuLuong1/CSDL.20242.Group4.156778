@@ -28,6 +28,7 @@
                     </toggleGroup>
                 </RadioButton>
                 <RadioButton fx:id="radioBtnBySupplier" mnemonicParsing="false" text="Nhà cung cấp" toggleGroup="$selectedBatch" />
+            <RadioButton fx:id="radioBtnByHSD" mnemonicParsing="false" text="Hạn sử dụng" toggleGroup="$selectedBatch" />
             </children>
             <BorderPane.margin>
                 <Insets top="8.0" />

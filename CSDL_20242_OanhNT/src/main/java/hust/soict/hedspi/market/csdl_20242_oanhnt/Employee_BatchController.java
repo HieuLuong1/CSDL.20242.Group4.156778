@@ -14,6 +14,8 @@ import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.converter.IntegerStringConverter;
 
@@ -29,6 +31,7 @@ public class Employee_BatchController {
     @FXML private TextField searchField;
     @FXML private RadioButton radioBtnByDate;
     @FXML private RadioButton radioBtnBySupplier;
+    @FXML private RadioButton radioBtnByHSD;
 
     private final ObservableList<Batch> batchList = FXCollections.observableArrayList();
 
@@ -104,26 +107,71 @@ public class Employee_BatchController {
 
     @FXML
     private void searchBatch() {
-        String keyword = searchField.getText().trim().toLowerCase();
+        String keyword = searchField.getText().trim();
 
         if (keyword.isEmpty()) {
             batchTable.setItems(batchList);
             return;
         }
 
-        ObservableList<Batch> filteredList = FXCollections.observableArrayList();
-        for (Batch b : batchList) {
-            if (radioBtnByDate.isSelected()) {
-                if (b.getImportDate().toString().contains(keyword)) {
-                    filteredList.add(b);
+        if (radioBtnByHSD.isSelected()) {
+            // Chỉ xử lý nếu keyword đúng định dạng yyyy-MM-dd
+            if (keyword.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                try (Connection conn = DatabaseConnection.getConnection()) {
+                    LocalDate parsedDate = LocalDate.parse(keyword);
+
+                    String sql = "SELECT b.batch_id, p.product_name, b.quantity_in_stock, b.expiration_date, "
+                            + "b.import_date, b.total_quantity, s.supplier_name, b.value_batch "
+                            + "FROM batch b "
+                            + "JOIN products p ON b.product_id = p.product_id "
+                            + "JOIN import_reports ir ON b.import_id = ir.import_id "
+                            + "JOIN suppliers s ON ir.supplier_id = s.supplier_id "
+                            + "WHERE b.expiration_date <= ? "
+                            + "ORDER BY b.expiration_date ASC";
+
+                    PreparedStatement stmt = conn.prepareStatement(sql);
+                    stmt.setDate(1, Date.valueOf(parsedDate));
+                    ResultSet rs = stmt.executeQuery();
+
+                    ObservableList<Batch> filteredList = FXCollections.observableArrayList();
+                    while (rs.next()) {
+                        int batchId = rs.getInt("batch_id");
+                        String productName = rs.getString("product_name");
+                        int quantityInStock = rs.getInt("quantity_in_stock");
+                        LocalDate expDate = rs.getDate("expiration_date") != null
+                                ? rs.getDate("expiration_date").toLocalDate() : null;
+                        LocalDate importDate = rs.getDate("import_date").toLocalDate();
+                        int totalQty = rs.getInt("total_quantity");
+                        String supplier = rs.getString("supplier_name");
+                        int value = rs.getInt("value_batch");
+
+                        filteredList.add(new Batch(batchId, importDate, expDate, totalQty, quantityInStock, productName, supplier, value));
+                    }
+                    rs.close();
+                    stmt.close();
+                    batchTable.setItems(filteredList);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            } else if (radioBtnBySupplier.isSelected()) {
-                if (b.getSupplier().toLowerCase().contains(keyword)) {
-                    filteredList.add(b);
+            } else {
+                batchTable.setItems(FXCollections.observableArrayList());
+            }
+        } else {
+            // fallback: lọc bằng Java như cũ
+            ObservableList<Batch> filteredList = FXCollections.observableArrayList();
+            for (Batch b : batchList) {
+                if (radioBtnByDate.isSelected()) {
+                    if (b.getImportDate().toString().contains(keyword)) {
+                        filteredList.add(b);
+                    }
+                } else if (radioBtnBySupplier.isSelected()) {
+                    if (b.getSupplier().toLowerCase().contains(keyword.toLowerCase())) {
+                        filteredList.add(b);
+                    }
                 }
             }
+            batchTable.setItems(filteredList);
         }
-        batchTable.setItems(filteredList);
     }
     private void updateStockInDatabase(int batchId, int newStock) {
         try (Connection conn = DatabaseConnection.getConnection()) {

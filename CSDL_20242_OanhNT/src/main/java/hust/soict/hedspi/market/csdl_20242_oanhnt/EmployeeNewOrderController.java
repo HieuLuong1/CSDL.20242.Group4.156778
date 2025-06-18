@@ -23,7 +23,6 @@ public class EmployeeNewOrderController {
     private TextField tfPhone;
     @FXML
     private TextField tfEmp;
-
     @FXML
     private TableView<Batch> tbBatch;
     @FXML
@@ -45,7 +44,6 @@ public class EmployeeNewOrderController {
     private TableColumn<InvoiceItem, Double> colPrice;
     @FXML
     private TableColumn<InvoiceItem, Double> colSum;
-
     @FXML
     private DatePicker dpOrderDate;
     @FXML
@@ -110,7 +108,7 @@ public class EmployeeNewOrderController {
                 + "FROM batch b "
                 + "JOIN products p ON b.product_id = p.product_id "
                 + "JOIN import_reports ir ON b.import_id = ir.import_id "
-                + "JOIN suppliers s ON ir.supplier_id = s.supplier_id where b.quantity_in_stock > 0";
+                + "JOIN suppliers s ON ir.supplier_id = s.supplier_id where b.quantity_in_stock > 0 ";
 
         try (Connection conn = DatabaseConnection.getConnection(); PreparedStatement stmt = conn.prepareStatement(sql); ResultSet rs = stmt.executeQuery()) {
 
@@ -138,35 +136,98 @@ public class EmployeeNewOrderController {
         }
     }
 
-    private int getProductIdByName(String productName) {
-        for (Item item : allItems) {
-            if (item.getName().equalsIgnoreCase(productName)) {
-                return item.getProductId();
-            }
-        }
-        return -1;
-    }
-
     private void searchBatchByProductName() {
-        String keyword = tfNameProduct.getText().trim().toLowerCase();
+        String keyword = tfNameProduct.getText().trim();
         if (keyword.isEmpty()) {
-            tbBatch.setItems(allBatches);
+            tbBatch.setItems(FXCollections.observableArrayList());
             return;
         }
 
-        ObservableList<Batch> filtered = FXCollections.observableArrayList();
-        for (Batch b : allBatches) {
-            String productName = b.getProductName().toLowerCase();
-            int productId = getProductIdByName(b.getProductName());
-
-            if (productName.contains(keyword) || String.valueOf(productId).contains(keyword)) {
-                filtered.add(b);
-            }
+        if (keyword.matches("\\d+")) {
+            searchBatchByProductId(keyword);
+        } else {
+            searchBatchByProductNameLike(keyword);
         }
-        tbBatch.setItems(filtered);
     }
 
-    // Xử lý thêm sản phẩm vào hóa đơn (Invoice)
+    private void searchBatchByProductNameLike(String nameKeyword) {
+        ObservableList<Batch> resultList = FXCollections.observableArrayList();
+
+        String sql = """
+        SELECT b.batch_id, b.import_date, b.expiration_date, b.total_quantity, b.quantity_in_stock,
+               p.product_id, p.product_name, s.supplier_name, b.value_batch, p.price_with_tax
+        FROM batch b
+        JOIN products p ON b.product_id = p.product_id
+        JOIN import_reports ir ON b.import_id = ir.import_id
+        JOIN suppliers s ON ir.supplier_id = s.supplier_id
+        WHERE b.quantity_in_stock > 0 AND LOWER(p.product_name) LIKE ?
+        ORDER BY b.expiration_date, b.batch_id ASC
+        LIMIT 1
+    """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, "%" + nameKeyword.toLowerCase() + "%");
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    resultList.add(extractBatchFromResultSet(rs));
+                }
+            }
+            tbBatch.setItems(resultList);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert("Lỗi khi tìm theo tên sản phẩm.");
+        }
+    }
+
+    private Batch extractBatchFromResultSet(ResultSet rs) throws SQLException {
+        int batchId = rs.getInt("batch_id");
+        LocalDate importDate = rs.getDate("import_date").toLocalDate();
+        Date expRaw = rs.getDate("expiration_date");
+        LocalDate expDate = expRaw != null ? expRaw.toLocalDate() : null;
+        int totalQty = rs.getInt("total_quantity");
+        int quantityInStock = rs.getInt("quantity_in_stock");
+        String productName = rs.getString("product_name");
+        String supplierName = rs.getString("supplier_name");
+        int valueBatch = rs.getInt("value_batch");
+
+        return new Batch(batchId, importDate, expDate, totalQty, quantityInStock, productName, supplierName, valueBatch);
+    }
+
+    private void searchBatchByProductId(String idKeyword) {
+        ObservableList<Batch> resultList = FXCollections.observableArrayList();
+
+        String sql = """
+        SELECT b.batch_id, b.import_date, b.expiration_date, b.total_quantity, b.quantity_in_stock,
+               p.product_id, p.product_name, s.supplier_name, b.value_batch, p.price_with_tax
+        FROM batch b
+        JOIN products p ON b.product_id = p.product_id
+        JOIN import_reports ir ON b.import_id = ir.import_id
+        JOIN suppliers s ON ir.supplier_id = s.supplier_id
+        WHERE b.quantity_in_stock > 0 AND p.product_id = ?
+        ORDER BY b.expiration_date, b.batch_id ASC
+        LIMIT 1
+    """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setInt(1, Integer.parseInt(idKeyword));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    resultList.add(extractBatchFromResultSet(rs));
+                }
+            }
+            tbBatch.setItems(resultList);
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert("Lỗi khi tìm theo mã sản phẩm.");
+        }
+    }
+
     @FXML
     private void handleSend() {
         Batch selected = tbBatch.getSelectionModel().getSelectedItem();
@@ -188,8 +249,6 @@ public class EmployeeNewOrderController {
             showAlert("Số lượng vượt quá số lượng tồn kho.");
             return;
         }
-
-        // Tìm Item tương ứng để lấy giá
         Item matchedItem = allItems.stream()
                 .filter(item -> item.getName().equals(selected.getProductName()))
                 .findFirst()
@@ -202,11 +261,7 @@ public class EmployeeNewOrderController {
 
         double price = matchedItem.getPrice();
         double total = price * quantity;
-
-        // Thêm vào danh sách orderItems
         orderItems.add(new InvoiceItem(selected.getBatchId(), selected.getProductName(), quantity, price, total));
-
-        // Cập nhật số lượng đã bán của batch và tổng tiền
         selected.setQuantityInStock(inStock - quantity);
         totalMoney += total;
         updateTotalMoneyLabel();
@@ -214,8 +269,6 @@ public class EmployeeNewOrderController {
         tbBatch.refresh();
         tfQuantity.clear();
     }
-
-    // Xử lý hủy 1 sản phẩm trong hóa đơn
     @FXML
     private void handleCancel() {
         InvoiceItem selectedItem = tableOrder.getSelectionModel().getSelectedItem();
@@ -237,8 +290,6 @@ public class EmployeeNewOrderController {
         orderItems.remove(selectedItem);
         tbBatch.refresh();
     }
-
-    // Xử lý xác nhận đặt hàng
     @FXML
     private ObservableList<InvoiceItem> handleConfirm() {
         String phoneCustomer = tfPhone.getText().trim();
@@ -253,18 +304,10 @@ public class EmployeeNewOrderController {
             showAlert("Vui lòng nhập đầy đủ thông tin khách hàng, nhân viên, ngày đặt và phương thức thanh toán.");
             return null;
         }
-
         if (orderItems.isEmpty()) {
             showAlert("Hóa đơn không có sản phẩm.");
             return null;
         }
-
-        String orderId = tfOrderID.getText().trim();
-        if (orderId.isEmpty()) {
-            showAlert("Mã đơn hàng không được để trống.");
-            return null;
-        }
-
         try (Connection conn = DatabaseConnection.getConnection()) {
             conn.setAutoCommit(false);
 
@@ -281,48 +324,44 @@ public class EmployeeNewOrderController {
                 conn.rollback();
                 return null;
             }
-
-            // Insert invoice
-            String insertInvoiceSQL = "INSERT INTO orders(order_id, order_date, total_amount,  payment_method, customer_id, employee_id) VALUES (?, ?, ?, ?, ?, ?)";
-            try (PreparedStatement psInvoice = conn.prepareStatement(insertInvoiceSQL)) {
-                psInvoice.setInt(1, Integer.parseInt(orderId));
-                psInvoice.setDate(2, Date.valueOf(dateValue));
-                psInvoice.setDouble(3, totalMoney);
-                psInvoice.setString(4, paymentMethod);
-                psInvoice.setInt(5, customerId);
-                psInvoice.setInt(6, employeeId);
+            String insertInvoiceSQL = "INSERT INTO orders(order_date, total_amount,  payment_method, customer_id, employee_id) VALUES (?, ?, ?, ?, ?)";
+            int generatedOrderId = -1;
+            try (PreparedStatement psInvoice = conn.prepareStatement(insertInvoiceSQL, Statement.RETURN_GENERATED_KEYS)) {
+                psInvoice.setDate(1, Date.valueOf(dateValue));
+                psInvoice.setDouble(2, totalMoney);
+                psInvoice.setString(3, paymentMethod);
+                psInvoice.setInt(4, customerId);
+                psInvoice.setInt(5, employeeId);
 
                 psInvoice.executeUpdate();
+
+                try (ResultSet generatedKeys = psInvoice.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        generatedOrderId = generatedKeys.getInt(1);  // lấy order_id mới
+                        tfOrderID.setText(String.valueOf(generatedOrderId));  // gán vào tfOrderID nếu muốn hiển thị
+                    } else {
+                        conn.rollback();
+                        showAlert("Không lấy được mã đơn hàng mới.");
+                        return null;
+                    }
+                }
             }
-
-            // Insert invoice details and update batch quantities
             String insertDetailSQL = "INSERT INTO order_details(order_id, batch_id, quantity) VALUES (?, ?, ?)";
-            //String updateBatchSQL = "UPDATE batch SET quantity_in_stock = quantity_in_stock - ? WHERE batch_id = ?";
-
             try (PreparedStatement psDetail = conn.prepareStatement(insertDetailSQL)) {
-                //PreparedStatement psBatchUpdate = conn.prepareStatement(updateBatchSQL)) {
-
                 for (InvoiceItem item : orderItems) {
-                    psDetail.setInt(1, Integer.parseInt(orderId));
+                    psDetail.setInt(1, generatedOrderId);  // dùng id mới tạo
                     psDetail.setInt(2, item.getBatchId());
                     psDetail.setInt(3, item.getQuantity());
-
                     psDetail.executeUpdate();
-
-                    //psBatchUpdate.setInt(1, item.getQuantity());
-                    //psBatchUpdate.setInt(2, item.getBatchId());
-                    //psBatchUpdate.executeUpdate();
                 }
-
             }
-
             conn.commit();
             showAlert("Đơn hàng đã được lưu thành công.");
 
             Stage stage = (Stage) btnConfirm.getScene().getWindow();
             stage.close();
             if (parentController != null) {
-                parentController.loadOrdersFromDB();  // reload dữ liệu mới từ DB
+                parentController.reloadAfterNewOrder(); // cập nhật đúng mã đơn + tổng
             }
 
             return orderItems;
@@ -359,8 +398,6 @@ public class EmployeeNewOrderController {
         }
         return -1;
     }
-
-    // Hiện hộp thoại cảnh báo
     private void showAlert(String message) {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setHeaderText(null);

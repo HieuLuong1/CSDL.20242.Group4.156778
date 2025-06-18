@@ -30,7 +30,30 @@ public class EmployeeOrderController implements Initializable {
     @FXML private TextField tfSearchField;
 
     private List<Invoice> allInvoices = new ArrayList<>();
+    private int employeeId;
 
+    public void setEmployeeId(int employeeId) {
+        this.employeeId = employeeId;
+        showTodayOrderCount(); // Gọi hàm này ngay sau khi nhận được ID
+    }
+    private void showTodayOrderCount() {
+        try (Connection conn = DatabaseConnection.getConnection()) {
+            String sql = "SELECT total_order(?, ?)";
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setInt(1, employeeId);
+            ps.setDate(2, java.sql.Date.valueOf(java.time.LocalDate.now()));
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                int count = rs.getInt(1);
+                lbSumCustomer.setText(String.valueOf(count));
+            } else {
+                lbSumCustomer.setText("0");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            lbSumCustomer.setText("Lỗi");
+        }
+    }
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         // Thiết lập column
@@ -121,7 +144,14 @@ public class EmployeeOrderController implements Initializable {
             String product = rs.getString("product_name");
             int quantity = rs.getInt("quantity");
             double price = rs.getDouble("price_with_tax");
-            items.add(new InvoiceItem(product, quantity, price));
+            items.add(new InvoiceItem(
+                    rs.getInt("batch_id"),
+                    null,
+                    rs.getString("product_name"),
+                    rs.getInt("quantity"),
+                    rs.getDouble("price_with_tax"),
+                    rs.getInt("quantity") * rs.getDouble("price_with_tax")
+            ));
         }
         rs.close();
         stmt.close();
@@ -129,18 +159,57 @@ public class EmployeeOrderController implements Initializable {
     }
 
     private void searchInvoiceByPhone(String phone) {
-        if (phone == null || phone.isEmpty()) {
+        if (phone == null || phone.isBlank()) {
             tableView.getItems().setAll(allInvoices);
-        } else {
-            List<Invoice> filtered = new ArrayList<>();
-            for (Invoice invoice : allInvoices) {
-                if (invoice.getPhoneCustomer().contains(phone)) {
-                    filtered.add(invoice);
+            return;
+        }
+
+        List<Invoice> filtered = new ArrayList<>();
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(
+                     "SELECT * FROM order_bought(?)"
+             )) {
+            stmt.setString(1, phone);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    int orderId = rs.getInt("orderid");
+                    String id = String.format("HD%03d", orderId);
+                    String date = rs.getDate("orderdate").toString();
+                    String method = rs.getString("method");
+                    double total = rs.getDouble("totalamount");
+
+                    // Lấy thêm thông tin tên khách hàng, nhân viên, số điện thoại (dùng truy vấn phụ)
+                    try (PreparedStatement detailStmt = conn.prepareStatement("""
+                    SELECT c.fullname AS cust_name, c.phone, e.firstname || ' ' || e.lastname AS emp_name
+                    FROM orders o
+                    JOIN customer c ON o.customer_id = c.customer_id
+                    JOIN employee e ON o.employee_id = e.employee_id
+                    WHERE o.order_id = ?
+                """)) {
+                        detailStmt.setInt(1, orderId);
+                        ResultSet drs = detailStmt.executeQuery();
+                        if (drs.next()) {
+                            String phoneCust = drs.getString("phone");
+                            String custName = drs.getString("cust_name");
+                            String empName = drs.getString("emp_name");
+
+                            List<InvoiceItem> items = getOrderDetailsFromDB(orderId, conn);
+                            Invoice invoice = new Invoice(id, date, method, phoneCust, custName, empName, items);
+                            filtered.add(invoice);
+                        }
+                        drs.close();
+                    }
                 }
             }
+
             tableView.getItems().setAll(filtered);
+            lbSumCustomer.setText(String.valueOf(filtered.size()));
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
+
 
     public void handleNewOrder() {
         try {
@@ -148,6 +217,7 @@ public class EmployeeOrderController implements Initializable {
             Parent root = loader.load();
             EmployeeNewOrderController controller = loader.getController();
             controller.setParentController(this);
+
             Stage stage = new Stage();
             stage.setScene(new Scene(root));
             stage.setTitle("Tạo hóa đơn");
@@ -158,20 +228,61 @@ public class EmployeeOrderController implements Initializable {
     }
 
     public void handlePrint() {
-        try {
-            Alert alert = new Alert(Alert.AlertType.INFORMATION);
-            alert.setTitle("Thông báo");
-            alert.setHeaderText(null);
-            alert.setContentText("Hóa đơn đã được in thành công.");
-            alert.showAndWait();
-        } catch (Exception e) {
-            e.printStackTrace();
+        Invoice selected = tableView.getSelectionModel().getSelectedItem();
+        if (selected == null) {
+            showAlert("Vui lòng chọn một hóa đơn để in.");
+            return;
         }
+
+        StringBuilder builder = new StringBuilder();
+        builder.append("=========== HÓA ĐƠN ===========\n");
+        builder.append("Mã hóa đơn: ").append(selected.getId()).append("\n");
+        builder.append("Ngày mua: ").append(selected.getDate()).append("\n");
+        builder.append("Khách hàng: ").append(selected.getNameCustomer()).append("\n");
+        builder.append("SĐT: ").append(selected.getPhoneCustomer()).append("\n");
+        builder.append("Nhân viên tạo: ").append(selected.getNameEmployee()).append("\n");
+        builder.append("Phương thức: ").append(selected.getPaymentMethod()).append("\n");
+        builder.append("-------------------------------\n");
+        builder.append("Sản phẩm\tSL\tĐơn giá\tThành tiền\n");
+
+        double total = 0;
+        for (InvoiceItem item : selected.getItems()) {
+            double lineTotal = item.getQuantity() * item.getUnitPrice();
+            total += lineTotal;
+            builder.append(String.format("%-20s%5d%12.0f%12.0f\n",
+                    item.getProductName(),
+                    item.getQuantity(),
+                    item.getUnitPrice(),
+                    lineTotal));
+        }
+
+        builder.append("-------------------------------\n");
+        builder.append(String.format("TỔNG TIỀN: %.0f VND\n", total));
+        builder.append("================================");
+
+        // Hiển thị hóa đơn bằng Alert hoặc có thể mở cửa sổ riêng nếu bạn muốn
+        TextArea textArea = new TextArea(builder.toString());
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Chi tiết Hóa đơn");
+        alert.getDialogPane().setContent(textArea);
+        alert.setResizable(true);
+        alert.showAndWait();
     }
 
-    public void addNewInvoice(Invoice newInvoice) {
-        allInvoices.add(newInvoice);
-        tableView.getItems().add(newInvoice);
-        lbSumCustomer.setText(String.valueOf(allInvoices.size()));
+    private void showAlert(String message) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("Cảnh báo");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
+
+    public void reloadAfterNewOrder() {
+        loadOrdersFromDB();
+        showTodayOrderCount();
     }
 }

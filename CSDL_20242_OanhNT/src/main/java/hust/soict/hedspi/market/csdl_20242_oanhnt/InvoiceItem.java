@@ -19,6 +19,15 @@ public class InvoiceItem {
         this.unitPrice = unitPrice;
         this.total = total;
     }
+    public InvoiceItem(int batchId, String product, String productName, int quantity, double unitPrice, double total) {
+        this.batchId = batchId;
+        this.product = product;
+        this.productName = productName;
+        this.quantity = quantity;
+        this.unitPrice = unitPrice;
+        this.total = total;
+    }
+
 
     public String getProduct() { return product; }
     public int getQuantity() { return quantity; }

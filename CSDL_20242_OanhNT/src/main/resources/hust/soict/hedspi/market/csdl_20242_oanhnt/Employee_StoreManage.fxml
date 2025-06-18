@@ -24,7 +24,7 @@
             </padding>
             <children>
                 <Label text="Tìm sản phẩm:" />
-                <TextField fx:id="searchField" prefWidth="250" promptText="Nhập tên sản phẩm" />
+                <TextField fx:id="searchField" prefWidth="250" promptText="Nhập tên sản phẩm, tên NCC" />
                 <Region HBox.hgrow="ALWAYS" />
             <Button fx:id="newBatchBtn" mnemonicParsing="false" onAction="#handleBatch" style="-fx-background-color: green;" text="Hàng vừa nhập" textFill="#efecec" />
                 <Button fx:id="addNewProductBtn" onAction="#handleAddProduct" style="-fx-background-color: #3498db; -fx-text-fill: white;" text="Thêm sản phẩm mới" />

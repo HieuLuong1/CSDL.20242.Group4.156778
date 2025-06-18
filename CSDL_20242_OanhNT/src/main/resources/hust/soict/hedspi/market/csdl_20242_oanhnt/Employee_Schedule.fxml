@@ -49,6 +49,7 @@
                         <TableColumn fx:id="colStartTime" prefWidth="150" text="Bắt đầu" />
                         <TableColumn fx:id="colEndTime" prefWidth="150" text="Kết thúc" />
                         <TableColumn fx:id="colStatus" prefWidth="150" text="Trạng thái" />
+                        <TableColumn fx:id="colNote" prefWidth="200" text="Ghi chú" />
                     </columns>
                 </TableView>
             </children>

@@ -93,6 +93,7 @@
                     <children>
                         <DatePicker fx:id="dpWorkDate" promptText="Ngày điểm danh" />
                         <ComboBox fx:id="cbStatus" prefWidth="150" promptText="Trạng thái" />
+                  <TextField fx:id="tfNote" promptText="Ghi chú " />
                         <Button fx:id="btnMark" text="Điểm danh" />
                     </children>
                 </HBox>

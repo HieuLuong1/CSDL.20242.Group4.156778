@@ -25,6 +25,7 @@ public class Admin_EmployeesManageController {
     @FXML private DatePicker dpWorkDate;
     @FXML private ComboBox<String> cbStatus;
     @FXML private Label lbPresent, lbLate, lbAbsent, lbSalary, lbLeave;
+    @FXML private TextField tfNote;
 
     private final ObservableList<Employee> employeeList = FXCollections.observableArrayList();
 
@@ -145,10 +146,10 @@ public class Admin_EmployeesManageController {
                 return;
             }
 
-            String sql = "INSERT INTO working(employee_id, schedule_id, work_date, status) " +
-                    "VALUES (?, ?, ?, ?) " +
+            String sql = "INSERT INTO working(employee_id, schedule_id, work_date, status, note) " +
+                    "VALUES (?, ?, ?, ?, ?) " +
                     "ON CONFLICT(employee_id, schedule_id, work_date) " +
-                    "DO UPDATE SET status = EXCLUDED.status";
+                    "DO UPDATE SET status = EXCLUDED.status, note = EXCLUDED.note";
 
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -156,6 +157,14 @@ public class Admin_EmployeesManageController {
                 stmt.setInt(2, scheduleId);
                 stmt.setDate(3, Date.valueOf(date));
                 stmt.setString(4, convertStatusToCode(status));
+
+                String note = tfNote.getText().trim();
+                if (note.isEmpty()) {
+                    stmt.setNull(5, Types.VARCHAR);
+                } else {
+                    stmt.setString(5, note);
+                }
+
                 stmt.executeUpdate();
                 updateAttendanceSummary(sel.getId());
             }

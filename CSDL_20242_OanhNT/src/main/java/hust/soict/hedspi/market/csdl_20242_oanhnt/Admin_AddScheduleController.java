@@ -20,6 +20,10 @@ public class Admin_AddScheduleController {
     @FXML private TableColumn<AssignedSchedule, String> colEmployeeId;
     @FXML private TableColumn<AssignedSchedule, String> colEmployeeName;
     @FXML private TableColumn<AssignedSchedule, String> colTemplate;
+    @FXML private Label ca1Label;
+    @FXML private Label ca2Label;
+    @FXML private Label ca3Label;
+    @FXML private Label ca4Label;
 
     private String selectedEmployeeId;
 
@@ -140,17 +144,24 @@ public class Admin_AddScheduleController {
 
     private void reload() {
         if (monthComboBox.getValue() == null) return;
-        int m = monthComboBox.getValue();
 
+        int m = monthComboBox.getValue();
+        int y = LocalDate.now().getYear(); // bạn có thể sửa để chọn năm nếu muốn
+
+        LocalDate start = LocalDate.of(y, m, 1);
+        LocalDate end = start.plusMonths(1); // đầu tháng kế tiếp
+
+        // Load lịch đã gán
         ObservableList<AssignedSchedule> data = FXCollections.observableArrayList();
         String q = "SELECT DISTINCT e.employee_id, e.firstname || ' ' || e.lastname AS name, " +
                 "'T' || s.start_day || '-T' || s.end_day || ' (' || s.start_time || '-' || s.end_time || ')' AS tmpl " +
                 "FROM working w JOIN employee e USING(employee_id) JOIN schedule s USING(schedule_id) " +
-                "WHERE EXTRACT(MONTH FROM work_date) = ?";
+                "WHERE work_date >= ? AND work_date < ?";
 
         try (Connection c = DatabaseConnection.getConnection();
              PreparedStatement ps = c.prepareStatement(q)) {
-            ps.setInt(1, m);
+            ps.setDate(1, Date.valueOf(start));
+            ps.setDate(2, Date.valueOf(end));
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
@@ -166,7 +177,45 @@ public class Admin_AddScheduleController {
         }
 
         assignedScheduleTable.setItems(data);
+
+        // THỐNG KÊ CA (Ca 1 - 4)
+        String caQuery = """
+        SELECT schedule_id, COUNT(DISTINCT employee_id) AS soluong
+        FROM schedule
+        JOIN working USING (schedule_id)
+        WHERE work_date >= ? AND work_date < ?
+        GROUP BY schedule_id
+        """;
+
+        ca1Label.setText("Ca 1: 0");
+        ca2Label.setText("Ca 2: 0");
+        ca3Label.setText("Ca 3: 0");
+        ca4Label.setText("Ca 4: 0");
+
+        try (Connection c = DatabaseConnection.getConnection();
+             PreparedStatement ps = c.prepareStatement(caQuery)) {
+            ps.setDate(1, Date.valueOf(start));
+            ps.setDate(2, Date.valueOf(end));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int ca = rs.getInt("schedule_id");
+                    int soLuong = rs.getInt("soluong");
+
+                    switch (ca) {
+                        case 1 -> ca1Label.setText("Ca 1: " + soLuong);
+                        case 2 -> ca2Label.setText("Ca 2: " + soLuong);
+                        case 3 -> ca3Label.setText("Ca 3: " + soLuong);
+                        case 4 -> ca4Label.setText("Ca 4: " + soLuong);
+                    }
+                }
+            }
+        } catch (SQLException ex) {
+            ex.printStackTrace();
+        }
     }
+
+
 
     public static class AssignedSchedule {
         private final String employeeId, employeeName, templateName;

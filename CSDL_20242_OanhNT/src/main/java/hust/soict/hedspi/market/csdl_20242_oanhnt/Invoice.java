@@ -11,7 +11,17 @@ public class Invoice {
     private String nameCustomer;
     private String nameEmployee;
     private List<InvoiceItem> items = new ArrayList<>();;
-
+    private double totalAmount;
+    public Invoice(String id, String date, String paymentMethod, double totalAmount) {
+        this.id = id;
+        this.date = date;
+        this.paymentMethod = paymentMethod;
+        this.totalAmount = totalAmount;
+        this.items = new ArrayList<>();
+    }
+    public double getTotalAmount() {
+        return totalAmount;
+    }
     public Invoice(String id, String date, String paymentMethod, String phoneCustomer,
                    String nameCustomer, String nameEmployee, List<InvoiceItem> items) {
         this.id = id;
@@ -29,6 +39,7 @@ public class Invoice {
         this.paymentMethod = paymentMethod;
         this.items = items;
     }
+
     public String getId() { return id; }
 
     public String getDate() { return date; }
@@ -44,6 +55,7 @@ public class Invoice {
     public List<InvoiceItem> getItems() { return items; }
 
     public double getTotal() {
+        if (totalAmount > 0) return totalAmount;
         if (items == null) return 0;
         return items.stream().mapToDouble(i -> i.getUnitPrice() * i.getQuantity()).sum();
     }

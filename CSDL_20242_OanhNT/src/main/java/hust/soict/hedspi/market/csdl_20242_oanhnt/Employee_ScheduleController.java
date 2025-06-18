@@ -33,6 +33,7 @@ public class Employee_ScheduleController implements Initializable {
     @FXML private TableColumn<WorkScheduleRecord, String> colStartTime;
     @FXML private TableColumn<WorkScheduleRecord, String> colEndTime;
     @FXML private TableColumn<WorkScheduleRecord, String> colStatus;
+    @FXML private TableColumn<WorkScheduleRecord, String> colNote;
 
     @FXML private ComboBox<String> monthCombo;
     @FXML private ComboBox<String> yearCombo;
@@ -62,6 +63,7 @@ public class Employee_ScheduleController implements Initializable {
         colStartTime.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getStartTime()));
         colEndTime.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getEndTime()));
         colStatus.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getStatus()));
+        colNote.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().getNote()));
     }
 
     private void setupMonthYearSelectors() {
@@ -81,7 +83,7 @@ public class Employee_ScheduleController implements Initializable {
 
     private void loadFromDatabase() {
         allRecords.clear();
-        String sql = "SELECT w.work_date, s.start_time, s.end_time, w.status " +
+        String sql = "SELECT w.work_date, s.start_time, s.end_time, w.status,  w.note " +
                 "FROM working w " +
                 "JOIN schedule s ON w.schedule_id = s.schedule_id " +
                 "WHERE w.employee_id = ? " +
@@ -110,8 +112,9 @@ public class Employee_ScheduleController implements Initializable {
 
                         };
                     }
+                    String note = rs.getString("note");
                     System.out.println("Loaded record: date=" + date + ", status=" + status);
-                    allRecords.add(new WorkScheduleRecord(date, startTime, endTime, status));
+                    allRecords.add(new WorkScheduleRecord(date, startTime, endTime, status, note));
                 }
             }
         } catch (Exception e) {

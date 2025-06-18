@@ -148,11 +148,13 @@ public class Employee_MainController {
     }
     @FXML
     public void handleOrder() {
-        try{
+        try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("EmployeeOrder.fxml"));
             Parent root = loader.load();
             contentArea.getChildren().setAll(root);
-        }catch(Exception e){
+            EmployeeOrderController controller = loader.getController();
+            controller.setEmployeeId(employeeID); // <-- quan trọng
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

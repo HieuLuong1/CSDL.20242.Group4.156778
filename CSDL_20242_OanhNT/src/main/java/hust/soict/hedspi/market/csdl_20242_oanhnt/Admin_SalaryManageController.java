@@ -8,10 +8,7 @@ import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.util.converter.IntegerStringConverter;
@@ -32,6 +29,7 @@ public class Admin_SalaryManageController {
     @FXML private TableColumn<Salary, Integer> colLeave;    // leave_pay
     @FXML private TableColumn<Salary, Integer> colActual;
     @FXML private TableColumn<Salary, String>  colNote;
+    @FXML private Button btnAward;
 
     private final ObservableList<Salary> salaryList = FXCollections.observableArrayList();
 
@@ -68,7 +66,83 @@ public class Admin_SalaryManageController {
             addEmptyRowToDB();
             filterSalaries();
         });
+        btnAward.setOnAction(e -> showRewardableEmployees());
     }
+    private void showRewardableEmployees() {
+        Integer month = cbMonth.getValue();
+        Integer year = cbYear.getValue();
+
+        if (month == null || year == null) {
+            showAlert(Alert.AlertType.WARNING, "Vui lòng chọn cả tháng và năm.");
+            return;
+        }
+
+        String sql = """
+        WITH temp AS (
+            SELECT employee_id, COUNT(*) AS dilam
+            FROM working
+            WHERE status = 'D'
+              AND EXTRACT(MONTH FROM work_date) = ?
+              AND EXTRACT(YEAR FROM work_date) = ?
+            GROUP BY employee_id
+            HAVING COUNT(*) >= 25
+        ),
+        temp_absent AS (
+            SELECT employee_id, COUNT(*) AS vang
+            FROM working
+            WHERE status = 'V'
+              AND EXTRACT(MONTH FROM work_date) = ?
+              AND EXTRACT(YEAR FROM work_date) = ?
+            GROUP BY employee_id
+        )
+        SELECT e.employee_id, CONCAT(e.lastname, ' ', e.firstname) AS fullname, t.dilam
+        FROM employee e
+        JOIN temp t ON e.employee_id = t.employee_id
+        LEFT JOIN temp_absent a ON e.employee_id = a.employee_id
+        WHERE t.dilam = (SELECT MAX(dilam) FROM temp)
+          AND a.vang IS NULL
+        ORDER BY fullname
+        """;
+
+        try (Connection conn = DatabaseConnection.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, month);
+            stmt.setInt(2, year);
+            stmt.setInt(3, month);
+            stmt.setInt(4, year);
+
+            ResultSet rs = stmt.executeQuery();
+            StringBuilder builder = new StringBuilder("Danh sách nhân viên chuyên cần nhất:\n");
+
+            boolean found = false;
+            while (rs.next()) {
+                found = true;
+                String id = rs.getString("employee_id");
+                String name = rs.getString("fullname");
+                int days = rs.getInt("dilam");
+                builder.append(String.format("- %s (%s): %d buổi\n", name, id, days));
+            }
+
+            if (!found) {
+                builder = new StringBuilder("Không có nhân viên nào đủ điều kiện.");
+            }
+
+            showAlert(Alert.AlertType.INFORMATION, builder.toString());
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert(Alert.AlertType.ERROR, "Lỗi truy vấn dữ liệu.");
+        }
+    }
+    private void showAlert(Alert.AlertType type, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle("Thông báo");
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
+
 
     private List<Integer> getMonths() {
         List<Integer> months = new ArrayList<>();

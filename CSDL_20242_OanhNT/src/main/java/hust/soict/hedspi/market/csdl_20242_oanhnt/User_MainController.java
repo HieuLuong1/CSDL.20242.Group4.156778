@@ -23,6 +23,7 @@ public class User_MainController {
 
     public static int customerID = 1;
     public static String currentUsername = "customer01";
+    public static String customerPhone = "";
     @FXML
     public void initialize() {
         try {
@@ -34,13 +35,15 @@ public class User_MainController {
                 case "customer05" -> customerID = 5;
                 default -> customerID = 1;
             }
-            String query = "SELECT fullname FROM customer WHERE customer_id = ?";
+            String query = "SELECT fullname, phone FROM customer WHERE customer_id = ?";
             try (Connection conn = DatabaseConnection.getConnection();
                  PreparedStatement ps = conn.prepareStatement(query)) {
+
                 ps.setInt(1, customerID);
                 ResultSet rs = ps.executeQuery();
                 if (rs.next()) {
                     welcomeLabel.setText("Xin chào, " + rs.getString("fullname"));
+                    customerPhone = rs.getString("phone");
                 }
             }
         } catch (Exception e) {
